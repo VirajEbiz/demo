@@ -22,19 +22,16 @@
 /// The `AutoplayFeedWidget` widget also includes UI elements such as user profile image, display name, timestamp, description, and options menu.
 ///
 /// The `AutoplayFeedWidget` widget is used in the home feed to display autoplay feed items.
-
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'package:get/get_rx/get_rx.dart';
-import 'package:get_storage/get_storage.dart';
+import 'package:hashtagable_v3/widgets/hashtag_text.dart';
 import 'package:video_player/video_player.dart';
 import 'package:watermel/app/Views/Home%20Feed/controllers/feed_home_controller.dart';
-import 'package:watermel/app/Views/Home%20Feed/home_widgets/share_bottom_sheet.dart';
-import 'package:watermel/app/Views/Home%20Feed/home_widgets/feed_detail_screen.dart';
+import 'package:watermel/app/Views/Home%20Feed/scroll_feed_page.dart';
 import 'package:watermel/app/Views/user_profile/user_profile_backup.dart';
 import 'package:watermel/app/core/helpers/contants.dart';
+import 'package:watermel/app/Views/Home%20Feed/home_widgets/share_bottom_sheet.dart';
 import 'package:watermel/app/utils/preference.dart';
 import 'package:watermel/app/utils/theme/colors.dart';
 import 'package:watermel/app/utils/theme/fonts.dart';
@@ -85,18 +82,23 @@ class _AutoplayFeedWidgetState extends State<AutoplayFeedWidget> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     isBookMarked.value =
         homeFeedController.homeFeedList[widget.index ?? 0].bookmark!;
     ind.value = widget.index ?? 0;
     videoPlayerController = VideoPlayerController.networkUrl(Uri.parse(
-        "$baseUrl${homeFeedController.homeFeedList[widget.index ?? 0].mediaData![0].video!}"))
+        "$baseForImage${homeFeedController.homeFeedList[widget.index ?? 0].mediaData![0].video!}"))
       ..initialize().then((_) {
         videoPlayerController!.setVolume(0);
         videoPlayerController!.play();
         setState(() {});
       });
+  }
+
+  @override
+  void dispose() {
+    videoPlayerController!.dispose();
+    super.dispose();
   }
 
   @override
@@ -187,16 +189,40 @@ class _AutoplayFeedWidgetState extends State<AutoplayFeedWidget> {
                   const SizedBox(
                     height: Insets.i5,
                   ),
-                  Obx(() => MyText(
-                        text_name: viewText(
-                            widget.description,
-                            homeFeedController
-                                .homeFeedList[widget.index!].isMore!.value),
+                  Obx(
+                    // () => MyText(
+                    //   text_name: viewText(
+                    //       widget.description,
+                    //       homeFeedController
+                    //           .homeFeedList[widget.index!].isMore!.value),
+                    //   fontWeight: FontWeight.w400,
+                    //   txtfontsize: FontSizes.s14,
+                    //   txtcolor: MyColors.grayColor,
+                    //   txtAlign: TextAlign.left,
+                    // ),
+                    () => HashTagText(
+                      text: viewText(
+                          widget.description,
+                          homeFeedController
+                              .homeFeedList[widget.index!].isMore!.value),
+                      basicStyle: TextStyle(
                         fontWeight: FontWeight.w400,
-                        txtfontsize: FontSizes.s14,
-                        txtcolor: MyColors.grayColor,
-                        txtAlign: TextAlign.left,
-                      )),
+                        fontSize: FontSizes.s14,
+                        color: MyColors.grayColor,
+                      ),
+                      decoratedStyle: TextStyle(
+                        fontWeight: FontWeight.w400,
+                        fontSize: FontSizes.s14,
+                        color: MyColors.greenColor,
+                      ),
+                      onTap: (text) {
+                        homeFeedController.selectedTopic.value =
+                            text.replaceAll('#', '');
+                        homeFeedController.getSeedsByTopic(true);
+                        setState(() {});
+                      },
+                    ),
+                  ),
                   widget.description!.length > 50
                       ? Obx(() => InkWell(
                             onTap: () {
@@ -236,7 +262,7 @@ class _AutoplayFeedWidgetState extends State<AutoplayFeedWidget> {
                   homeFeedController.homeFeedList[widget.index!].owner == null
                       ? SizedBox()
                       : ProfileImageNameWidget(
-                          "$baseUrl${homeFeedController.homeFeedList[widget.index!].captionHistory!.first.userProfileUrl}",
+                          "$baseForImage${homeFeedController.homeFeedList[widget.index!].captionHistory!.first.userProfileUrl}",
                           homeFeedController.homeFeedList[widget.index!]
                                   .captionHistory!.first.userName ??
                               "N/A",
@@ -310,80 +336,8 @@ class _AutoplayFeedWidgetState extends State<AutoplayFeedWidget> {
                         onTap: () {
                           homeFeedController.viewedPost(homeFeedController
                               .homeFeedList[widget.index!].id!);
-                          Get.to(() => FeedDetailScreen(
-                                myReaction: homeFeedController
-                                    .homeFeedList[widget.index!].myReaction,
-                                createTime: homeFeedController
-                                    .homeFeedList[widget.index!].createdAt,
-                                shareURL: homeFeedController
-                                    .homeFeedList[widget.index!].shareURL,
-                                commentCount: homeFeedController
-                                    .homeFeedList[widget.index!].commentsCount,
-                                isBookmark: homeFeedController
-                                    .homeFeedList[widget.index!].bookmark,
-                                likeCount: homeFeedController
-                                    .homeFeedList[widget.index!].reactionsCount,
-                                thumbnail: homeFeedController
-                                            .homeFeedList[widget.index!]
-                                            .thumbnailURL ==
-                                        null
-                                    ? ""
-                                    : "$baseUrl${homeFeedController.homeFeedList[widget.index!].thumbnailURL}",
-                                caption: homeFeedController
-                                    .homeFeedList[widget.index!].caption,
-                                feedID: homeFeedController
-                                    .homeFeedList[widget.index!].id,
-                                mediaURL: homeFeedController.tempList.any(
-                                        (element) =>
-                                            element ==
-                                            homeFeedController
-                                                .homeFeedList[widget.index!]
-                                                .mediaData!
-                                                .first
-                                                .video
-                                                ?.split('.')
-                                                .last)
-                                    ? "$baseUrl${homeFeedController.homeFeedList[widget.index!].mediaData!.first.video}"
-                                    : homeFeedController
-                                        .homeFeedList[widget.index!]
-                                        .mediaData!
-                                        .first
-                                        .image,
-                                mediaType: homeFeedController.tempList.any(
-                                        (element) =>
-                                            element ==
-                                            homeFeedController
-                                                .homeFeedList[widget.index!]
-                                                .mediaData!
-                                                .first
-                                                .video
-                                                ?.split('.')
-                                                .last)
-                                    ? 1
-                                    : 0,
-                                index: widget.index,
-                                userName: homeFeedController
-                                    .homeFeedList[widget.index!].user!.username,
-                                displayname: homeFeedController
-                                    .homeFeedList[widget.index!]
-                                    .user!
-                                    .userprofile!
-                                    .displayName,
-                                userProfile: homeFeedController
-                                                .homeFeedList[widget.index!]
-                                                .user!
-                                                .userprofile!
-                                                .profilePicture ==
-                                            null ||
-                                        homeFeedController
-                                                .homeFeedList[widget.index!]
-                                                .user!
-                                                .userprofile!
-                                                .profilePicture ==
-                                            ""
-                                    ? ""
-                                    : "$baseUrl${homeFeedController.homeFeedList[widget.index!].user!.userprofile!.profilePicture}",
-                              ));
+                          Get.to(
+                              () => ScrollFeedPage(firstIndex: widget.index!));
                         },
                         child: Container(
                           height: Get.height * 0.28,

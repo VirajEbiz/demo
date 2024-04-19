@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:light_compressor/light_compressor.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
+import 'package:watermel/app/Views/camera/edit_video_page.dart';
 import 'package:watermel/app/core/helpers/api_manager.dart';
 import 'package:watermel/app/core/helpers/contants.dart';
 import 'package:watermel/app/method_channel/generate_thumnail_class.dart';
@@ -174,6 +175,19 @@ class CreateFeedController extends GetxController {
       // Get.back();
       selectedFilePath.value = result.path;
       print("Check selected path ==> ${selectedFilePath.value}");
+      Get.back();
+    }
+  }
+
+  videoCamera() async {
+    var result = await picker.pickVideo(
+        source: ImageSource.camera, maxDuration: const Duration(seconds: 60));
+    if (result != null) {
+      Get.to(
+        () => EditVideoPage(
+          filePath: result.path,
+        ),
+      );
     }
   }
 
@@ -284,8 +298,6 @@ class CreateFeedController extends GetxController {
         fromHome == true
             ? await Get.offAll(() => HomePage(pageIndex: 0))
             : null;
-      } else if (response.code == "000") {
-        await CreateNewFeed(type, fromHome);
       } else {
         Toaster().warning(response.message.toString());
       }

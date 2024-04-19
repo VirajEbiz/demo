@@ -24,6 +24,7 @@ class MyStorage {
   static const String refreshToken = "refreshToken";
 
   static const String Accout_IsPrivate = "Accout_IsPrivate";
+  static const String bio = "bio";
 
   static dynamic read(String name) {
     return storage.read(name);

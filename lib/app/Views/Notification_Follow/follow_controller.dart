@@ -21,8 +21,6 @@ class FollowController extends GetxController {
           fromNotification == true ? Get.back() : null;
           Toaster().warning(response.message);
           update();
-        } else if (response.code == "000") {
-          await acceptFollowReqAPI(userId, fromNotification);
         } else {
           Toaster().warning(response.message);
         }
@@ -44,8 +42,6 @@ class FollowController extends GetxController {
           fromNotification == true ? Get.back() : null;
           Toaster().warning(response.message);
           return true;
-        } else if (response.code == "000") {
-          await rejectFollowReqAPI(userId, fromNotification);
         } else {
           Toaster().warning(response.message);
         }
@@ -71,8 +67,6 @@ class FollowController extends GetxController {
         var response = await ApiManager().call(myUrl, formData, ApiType.post);
         if (response.status == "success") {
           Toaster().warning(response.message);
-        } else if (response.code == "000") {
-          await FollowTheUsesr(userName);
         } else {
           Toaster().warning(response.message);
         }
@@ -104,8 +98,6 @@ class FollowController extends GetxController {
           final homefeedController = Get.put(HomeFeedController());
           homefeedController.getNotificationCountAPI(3);
           log("Notification Count ==> ${notificationList.length}");
-        } else if (response.code == "000") {
-          await getNotificationListAPI();
         } else {
           Toaster().warning(response.message);
         }

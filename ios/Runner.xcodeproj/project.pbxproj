@@ -16,8 +16,8 @@
 		74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74858FAE1ED2DC5600515810 /* AppDelegate.swift */; };
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
-		C8F3A5D52BBBE586001FFE6D /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = C8F3A5D42BBBE586001FFE6D /* GoogleService-Info.plist */; };
-		C8F3A5D72BBBE598001FFE6D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C8F3A5D62BBBE598001FFE6D /* Assets.xcassets */; };
+		C80ECA652BD1591800E7360C /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = C80ECA642BD1591800E7360C /* GoogleService-Info.plist */; };
+		C80ECA672BD1592700E7360C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C80ECA662BD1592700E7360C /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -64,9 +64,9 @@
 		97C146FB1CF9000F007C117D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		97C147001CF9000F007C117D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		97C147021CF9000F007C117D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		C80ECA642BD1591800E7360C /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "../../../../WaterMel-Flutter-App 2/ios/Runner/GoogleService-Info.plist"; sourceTree = "<group>"; };
+		C80ECA662BD1592700E7360C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = "../../../../WaterMel-Flutter-App 2/ios/Runner/Assets.xcassets"; sourceTree = "<group>"; };
 		C8BA96C52B74E388008F28EE /* Runner.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Runner.entitlements; sourceTree = "<group>"; };
-		C8F3A5D42BBBE586001FFE6D /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "../../../../../../watermel-flutter/ios/Runner/GoogleService-Info.plist"; sourceTree = "<group>"; };
-		C8F3A5D62BBBE598001FFE6D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = "../../../../../../watermel-flutter/ios/Runner/Assets.xcassets"; sourceTree = "<group>"; };
 		D2E823E25D1190958D07EF15 /* Pods-Runner.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.debug.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"; sourceTree = "<group>"; };
 		F27B34622BF04D64610C6BF5 /* Pods-RunnerTests.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.profile.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.profile.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -143,8 +143,8 @@
 		97C146F01CF9000F007C117D /* Runner */ = {
 			isa = PBXGroup;
 			children = (
-				C8F3A5D62BBBE598001FFE6D /* Assets.xcassets */,
-				C8F3A5D42BBBE586001FFE6D /* GoogleService-Info.plist */,
+				C80ECA662BD1592700E7360C /* Assets.xcassets */,
+				C80ECA642BD1591800E7360C /* GoogleService-Info.plist */,
 				C8BA96C52B74E388008F28EE /* Runner.entitlements */,
 				97C146FA1CF9000F007C117D /* Main.storyboard */,
 				97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */,
@@ -268,10 +268,10 @@
 			files = (
 				97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */,
 				3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */,
-				C8F3A5D52BBBE586001FFE6D /* GoogleService-Info.plist in Resources */,
 				97C146FC1CF9000F007C117D /* Main.storyboard in Resources */,
-				C8F3A5D72BBBE598001FFE6D /* Assets.xcassets in Resources */,
 				0CC364FD7330B27512AB5D46 /* (null) in Resources */,
+				C80ECA672BD1592700E7360C /* Assets.xcassets in Resources */,
+				C80ECA652BD1591800E7360C /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

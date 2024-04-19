@@ -125,7 +125,7 @@ class _WatchViewWidgetState extends State<WatchViewWidget> {
                                             .thumbnailURL ==
                                         null
                                     ? ""
-                                    : "$baseUrl${userProfileController.watchFeedData[index].thumbnailURL}")),
+                                    : "$baseForImage${userProfileController.watchFeedData[index].thumbnailURL}")),
 
                         // userProfileController
                         //         .watchFeedData[index].mediaData!.isNotEmpty

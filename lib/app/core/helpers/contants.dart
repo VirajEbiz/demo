@@ -5,11 +5,9 @@ const String baseUrl =
     //'https://139.162.157.213';
 // https://d8af-2401-4900-1c02-2217-d4a5-3468-c824-d94c.ngrok-free.app/
     // 'https://492b-2402-a00-400-1f99-7f96-7648-b2e3-da59.ngrok-free.app/';
-    'https://flashlick.com/';
-
-const noAuth = [
-  baseUrl + googleLoginAPI,
-];
+    // 'https://flashlick.com/';
+// 'https://watermels.com/';
+    'https://flashlick.info/';
 
 //API list
 const socialLogin = "socialLogin";
@@ -17,12 +15,13 @@ const userProfile = "auth/profile/";
 const signUP = "auth/register/";
 const logOut = "auth/logout/";
 const userLogin = "auth/login/";
-const baseForImage = "https://flashlick.com";
+const baseForImage = "";
 const userFeed = "auth/user-seed/";
 const getAllFeedUrl = "seed/posts/";
 const searchuser = "auth/search-user/?";
 const createFeed = "seed/posts/";
 const deleteFeed = "seed/posts/";
+const editFeed = "seed/posts/";
 const getPeopleYouKnowEndpoint = "auth/relevant-people/?page=";
 const bookMarkFeed = "seed/bookmark/";
 //! GET BOOKMARK LIST
@@ -55,3 +54,13 @@ const notificationList = "notifications/?page=";
 //! Delete Account
 const deleteAccount = "auth/user/";
 const repostTheFeed = "seed/re-post/";
+// Get Trending Debates
+const debates = "debate/trending-debates/";
+// Get Relative Seeds
+const relativeSeeds = "seed/relevant-posts/?page=";
+// Get Top Influencers
+const topInfluencers = "bill-board/";
+// Get trending Hashtags
+const trendingHashtags = "seed/trending-hashtags/";
+// Get suggested Hashtags
+const suggestedHashtags = "seed/hashtag-suggestion/?hashtag=";

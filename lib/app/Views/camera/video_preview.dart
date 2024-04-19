@@ -2,6 +2,8 @@ import 'dart:developer';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_ffmpeg/flutter_ffmpeg.dart';
+import 'package:flutter_ffmpeg/media_information.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:light_compressor/light_compressor.dart';
@@ -9,7 +11,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:video_player/video_player.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
 import 'package:watermel/app/Views/Home%20Feed/controllers/feed_home_controller.dart';
-import 'package:watermel/app/Views/camera/camera_page_update.dart';
 import 'package:watermel/app/Views/create_new_feed/create_feed_controller.dart';
 import 'package:watermel/app/Views/create_new_feed/create_new_feed.dart';
 import 'package:watermel/app/Views/draft/edit_draft-screen.dart';
@@ -50,9 +51,9 @@ class CapturedVideoPreviewState extends State<CapturedVideoPreview> {
 
   void initState() {
     super.initState();
-
     getThumnail();
     getData();
+    print("Check thumnial video ==> ${widget.videoURL}");
   }
 
   getThumnail() async {
@@ -101,188 +102,159 @@ class CapturedVideoPreviewState extends State<CapturedVideoPreview> {
     }
   }
 
-  onwillPop() {
-    CreateFeedController createFeedController = Get.put(CreateFeedController());
-    widget.fromEdit == true
-        ? Get.offAll(
-            () => EditDraftScreen(
-                  fromVideoRecording: false,
-                  isPrivate: widget.isPrivate,
-                  thumbnailURL: widget.thumbnailURL,
-                  postType: widget.selectedType,
-                  index: widget.ind,
-                  mediaURL: widget.draftList?[widget.ind!]["videopath"] ?? "",
-                  draftList: widget.draftList,
-                ),
-            transition: Transition.leftToRight,
-            duration: const Duration(milliseconds: 400))
-        : Get.offAll(
-            () => CreateNewFeedScreen(
-                  videoPath: widget.videoURL,
-                  caption: widget.caption,
-                  thumbnailURl: widget.thumbnailURL,
-                  selectedType: widget.selectedType,
-                  fromVideoRecording: false,
-                ),
-            transition: Transition.leftToRight,
-            duration: const Duration(milliseconds: 400));
-  }
-
   @override
   Widget build(BuildContext context) {
     log("Check ==>  $baseUrl${widget.videoURL}");
     log("Check ==>  ${widget.fromEdit}");
-    return WillPopScope(
-      onWillPop: () => onwillPop(),
-      child: Scaffold(
-        backgroundColor: MyColors.blackColor,
-        body: Stack(
-          children: [
-            Positioned(
-              left: 0,
-              right: 0,
-              top: 0,
-              bottom: 0,
-              child: Container(
-                height: Get.height * 0.9,
-                width: Get.width,
-                color: Colors.black,
-                child: GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _controller.value.isPlaying
-                          ? _controller.pause()
-                          : _controller.play();
-                    });
-                  },
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      _controller.value != null &&
-                              _controller.value.isInitialized
-                          ? Center(
-                              child: AspectRatio(
-                                aspectRatio: _controller.value.aspectRatio,
-                                child: VideoPlayer(_controller),
-                              ),
-                            )
-                          : Center(
-                              child: MyText(
-                                text_name: "Loading....",
-                                txtcolor: MyColors.whiteColor,
-                                fontWeight: FontWeight.w500,
-                                txtfontsize: FontSizes.s15,
+    return Scaffold(
+      backgroundColor: MyColors.blackColor,
+      body: Stack(
+        children: [
+          Positioned(
+            left: 0,
+            right: 0,
+            top: 0,
+            bottom: 0,
+            child: Container(
+              height: Get.height * 0.9,
+              width: Get.width,
+              color: Colors.black,
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _controller.value.isPlaying
+                        ? _controller.pause()
+                        : _controller.play();
+                  });
+                },
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    _controller.value != null && _controller.value.isInitialized
+                        ? Center(
+                            child: AspectRatio(
+                              aspectRatio: _controller.value.aspectRatio,
+                              child: VideoPlayer(_controller),
+                            ),
+                          )
+                        : Center(
+                            child: MyText(
+                              text_name: "Loading....",
+                              txtcolor: MyColors.whiteColor,
+                              fontWeight: FontWeight.w500,
+                              txtfontsize: FontSizes.s15,
+                            ),
+                          ),
+                    _controller.value.isPlaying == true
+                        ? SizedBox()
+                        : Positioned(
+                            top: 0,
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            child: Center(
+                              child: Container(
+                                height: 48,
+                                alignment: Alignment.center,
+                                width: 48,
+                                decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color:
+                                        MyColors.whiteColor.withOpacity(0.8)),
+                                child: SvgPicture.asset(MyImageURL.playIcon),
                               ),
                             ),
-                      _controller.value.isPlaying == true
-                          ? SizedBox()
-                          : Positioned(
-                              top: 0,
-                              bottom: 0,
-                              left: 0,
-                              right: 0,
-                              child: Center(
-                                child: Container(
-                                  height: 48,
-                                  alignment: Alignment.center,
-                                  width: 48,
-                                  decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color:
-                                          MyColors.whiteColor.withOpacity(0.8)),
-                                  child: SvgPicture.asset(MyImageURL.playIcon),
-                                ),
-                              ),
-                            )
-                    ],
-                  ),
+                          )
+                  ],
                 ),
               ),
             ),
-            Positioned(
-              top: Insets.i35,
-              left: Insets.i20,
-              child: InkWell(
-                onTap: () {
-                  widget.fromEdit == true
-                      ? Get.offAll(
-                          () => EditDraftScreen(
-                                fromVideoRecording: false,
-                                isPrivate: widget.isPrivate,
-                                caption: widget.caption,
-                                thumbnailURL: widget.thumbnailURL,
-                                index: widget.ind,
-                                postType: widget.selectedType,
-                                mediaURL: widget.videoURL,
-                              ),
-                          transition: Transition.leftToRight,
-                          duration: Duration(milliseconds: 400))
-                      : Get.offAll(
-                          () => CreateNewFeedScreen(
-                                caption: widget.caption,
-                                thumbnailURl: widget.thumbnailURL,
-                                videoPath: widget.videoURL,
-                                selectedType: widget.selectedType,
-                                fromVideoRecording: false,
-                              ),
-                          transition: Transition.leftToRight,
-                          duration: Duration(milliseconds: 400));
-                },
-                child: const Icon(
-                  Icons.close,
-                  size: Insets.i35,
-                  color: Colors.white,
-                ),
+          ),
+          Positioned(
+            top: Insets.i35,
+            left: Insets.i20,
+            child: InkWell(
+              onTap: () {
+                Get.back();
+                // widget.fromEdit == true
+                //     ? Get.offAll(
+                //         () => EditDraftScreen(
+                //               fromVideoRecording: false,
+                //               isPrivate: widget.isPrivate,
+                //               caption: widget.caption,
+                //               thumbnailURL: widget.thumbnailURL,
+                //               index: widget.ind,
+                //               postType: widget.selectedType,
+                //               mediaURL: widget.videoURL,
+                //             ),
+                //         transition: Transition.leftToRight,
+                //         duration: Duration(milliseconds: 400))
+                //     : Get.offAll(
+                //         () => CreateNewFeedScreen(
+                //               caption: widget.caption,
+                //               thumbnailURl: widget.thumbnailURL,
+                //               videoPath: widget.videoURL,
+                //               selectedType: widget.ind,
+                //               fromVideoRecording: false,
+                //             ),
+                //         transition: Transition.leftToRight,
+                //         duration: Duration(milliseconds: 400));
+              },
+              child: const Icon(
+                Icons.arrow_back_ios_rounded,
+                size: Insets.i35,
+                color: Colors.white,
               ),
             ),
-          ],
-        ),
-        floatingActionButton: FloatingActionButton(
-            onPressed: () async {
-              showLoader();
-              int sizeInBytes = 0;
-              File file =
-                  File(await getCompresssedVideo(widget.videoURL) ?? "");
-              if (file != null) {
-                sizeInBytes = await file.length();
-                double sizeInKB = sizeInBytes / 1024;
-                widget.videoURL = file.path;
-              } else {
-                Get.back();
-              }
-
-              hideLoader();
-              if (sizeInBytes > maxSize) {
-                Toaster().warning("File size must be between 500 KB to 20 MB");
-                Get.back();
-                return;
-              } else {
-                await _controller.dispose();
-
-                widget.fromEdit == true
-                    ? Get.offAll(() => EditDraftScreen(
-                          fromVideoRecording: true,
-                          isPrivate: widget.isPrivate,
-                          caption: widget.caption,
-                          thumbnailURL: widget.thumbnailURL,
-                          index: widget.ind,
-                          postType: widget.selectedType,
-                          mediaURL: widget.videoURL,
-                        ))
-                    : Get.offAll(() => CreateNewFeedScreen(
-                          caption: widget.caption,
-                          thumbnailURl: widget.thumbnailURL,
-                          selectedType: widget.selectedType,
-                          fromVideoRecording: true,
-                          videoPath: widget.videoURL,
-                        ));
-              }
-            },
-            child: const Icon(
-              Icons.send,
-              color: Colors.white,
-            )),
+          ),
+        ],
       ),
+      floatingActionButton: FloatingActionButton(
+          onPressed: () async {
+            showLoader();
+            File file = File(await getCompresssedVideo(widget.videoURL) ?? "");
+            int sizeInBytes = await file.length();
+            double sizeInKB = sizeInBytes / 1024;
+            widget.videoURL = file.path;
+            hideLoader();
+            if (sizeInBytes > maxSize) {
+              Toaster().warning("File size must be between 500 KB to 20 MB");
+              return;
+            } else {
+              await _controller.dispose();
+              log("check data ==> # ${widget.fromEdit}");
+              log("check data ==> # ${widget.selectedType}");
+              log("check data ==> # 111${widget.thumbnailURL}");
+              CreateFeedController createFeedController =
+                  Get.put(CreateFeedController());
+              createFeedController.selectedFilePath.value = file.path;
+              createFeedController.selectedIndex = widget.selectedType!;
+              createFeedController.generateThumbnail(file.path);
+              Get.back();
+              Get.back();
+              // widget.fromEdit == true
+              //     ? Get.offAll(() => EditDraftScreen(
+              //           fromVideoRecording: true,
+              //           isPrivate: widget.isPrivate,
+              //           caption: widget.caption,
+              //           thumbnailURL: widget.thumbnailURL,
+              //           index: widget.ind,
+              //           postType: widget.selectedType,
+              //           mediaURL: widget.videoURL,
+              //         ))
+              //     : Get.offAll(() => CreateNewFeedScreen(
+              //           caption: widget.caption,
+              //           thumbnailURl: widget.thumbnailURL,
+              //           selectedType: widget.selectedType,
+              //           fromVideoRecording: true,
+              //           videoPath: widget.videoURL,
+              //         ));
+            }
+          },
+          child: const Icon(
+            Icons.send,
+            color: Colors.white,
+          )),
     );
   }
 
@@ -305,10 +277,6 @@ class CapturedVideoPreviewState extends State<CapturedVideoPreview> {
 
       if (sizeInBytes > maxSize) {
         Toaster().warning("File size must be between 500 KB to 20 MB");
-        Get.back();
-        Get.back();
-        hideLoader();
-        return null;
       }
       return sizeInBytes > maxSize ? null : outputFile;
       // use the file

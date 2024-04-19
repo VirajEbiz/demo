@@ -15,7 +15,6 @@ class IntroPage extends StatelessWidget {
     // try {
     //   var token = await MyStorage.read(MyStorage.token);
     //   var userId = await MyStorage.read(MyStorage.userId);
-
     //   if (token != null && userId != null && token != "" && userId != "") {
     //     Get.offAll(() => const HomePage());
     //   } else {

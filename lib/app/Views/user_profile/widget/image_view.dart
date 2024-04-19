@@ -4,7 +4,9 @@ import 'package:watermel/app/Views/Home%20Feed/controllers/feed_home_controller.
 import 'package:watermel/app/core/helpers/contants.dart';
 import 'package:watermel/app/Views/user_profile/user_profile_controller.dart';
 import 'package:watermel/app/utils/theme/colors.dart';
+import 'package:watermel/app/utils/theme/fonts.dart';
 import 'package:watermel/app/widgets/cache_image_widget.dart';
+import 'package:watermel/app/widgets/common_text.dart';
 import 'package:watermel/app/widgets/common_widget.dart';
 
 class ImageViewWidget extends StatefulWidget {
@@ -66,19 +68,52 @@ class _ImageViewWidgetState extends State<ImageViewWidget> {
                   },
                   child: Container(
                       decoration: BoxDecoration(
-                          color: MyColors.borderColor,
+                          gradient: LinearGradient(
+                              begin: Alignment.bottomCenter,
+                              end: Alignment.topCenter,
+                              colors: [
+                                MyColors.whiteColor,
+                                MyColors.lightGray,
+                              ]),
                           border: Border.all(color: MyColors.whiteColor)),
                       height: Get.width * 0.20,
                       child: userProfileController
                               .imageFeedData[index].mediaData!.isEmpty
-                          ? const CustomImageView(
-                              imagePathOrUrl: "",
-                              isProfilePicture: false,
+                          ? Column(
+                              children: [
+                                const SizedBox(
+                                  height: 15,
+                                ),
+                                const SizedBox(
+                                  height: 30,
+                                  width: 30,
+                                  child: CustomImageView(
+                                      imagePathOrUrl: "",
+                                      isProfilePicture: false),
+                                ),
+                                const SizedBox(
+                                  height: 2,
+                                ),
+                                SizedBox(
+                                  height: Get.width * 0.15,
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: Insets.i10),
+                                    child: MyText(
+                                      text_name:
+                                          '"${userProfileController.imageFeedData[index].caption}"',
+                                      txtcolor: MyColors.blackColor,
+                                      fontWeight: FontWeight.bold,
+                                      textOverflow: TextOverflow.fade,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             )
                           : CustomImageView(
                               isProfilePicture: false,
                               imagePathOrUrl:
-                                  "$baseUrl${userProfileController.imageFeedData[index].mediaData![0].image}")),
+                                  "$baseForImage${userProfileController.imageFeedData[index].mediaData![0].image}")),
                 );
               },
             ),

@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'package:watermel/app/Views/Home%20Feed/controllers/feed_home_controller.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:watermel/app/Views/Home%20Feed/controllers/scroll_controller.dart';
+import 'package:watermel/app/Views/top_influencers/top_influencers_page.dart';
 import 'package:watermel/app/Views/create_new_feed/create_page.dart';
+import 'package:watermel/app/Views/trendingDebates/trending_debates_page.dart';
 import 'package:watermel/app/Views/user_profile/user_profile_backup.dart';
 import 'package:watermel/app/core/theme/theme.dart';
 import 'package:watermel/app/Views/create_new_feed/create_new_feed.dart';
@@ -25,7 +27,6 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   HomeController homeController = Get.put(HomeController());
-  HomeFeedController homeFeedController = Get.put(HomeFeedController());
 
   @override
   void initState() {
@@ -44,16 +45,21 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     List<Widget> pages = [
-      FeedScreen(),
-      ComingSoonWidget(fromHome: true),
-      ComingSoonWidget(fromHome: true),
+      const FeedScreen(),
+      // ComingSoonWidget(fromHome: true),
+      const TopInfluencersPage(),
+      // ComingSoonWidget(fromHome: true),
+      const TrendingDebatesPage(),
       UserProfileScreenbackup(
         fromProfile: true,
       )
     ];
     return SafeArea(
-      child: WillPopScope(
-          onWillPop: () => onWillPopAlert(context),
+      child: PopScope(
+          canPop: false,
+          onPopInvoked: (didPop) => homeController.pageIndex.value == 0
+              ? null
+              : onWillPopAlert(context),
           child: Scaffold(
             //backgroundColor: MyColors.whiteColor,
             //extendBody: true,
@@ -67,56 +73,71 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
               shadowColor: MyColors.blackColor,
               elevation: 0,
               height: 70,
-              shape: const CircularNotchedRectangle(),
-              notchMargin: Insets.i10,
-              color: MyColors.whiteColor,
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  InkWell(
-                    onTap: () {
-                      if (homeController.pageIndex.value == 0) {
-                        Get.find<HomeScrollController>().scrollToTop();
-                      }
-                      homeController.pageIndex.value = 0;
-                    },
-                    child: BottomNavBarItem(
-                      asset: MyImageURL.homeNew,
-                      controller: homeController,
-                      index: 0,
-                    ),
-                  ),
-                  InkWell(
-                    onTap: () {
-                      homeController.pageIndex.value = 1;
-                    },
-                    child: BottomNavBarItem(
-                      asset: MyImageURL.reel,
-                      controller: homeController,
-                      index: 1,
-                    ),
-                  ),
-                  const SizedBox(
-                    width: 20,
-                  ),
-                  InkWell(
-                    onTap: () {
-                      homeController.pageIndex.value = 2;
-                    },
-                    child: BottomNavBarItem(
-                      asset: MyImageURL.menuNew,
-                      controller: homeController,
-                      index: 2,
-                    ),
-                  ),
-                  InkWell(
-                    onTap: () {
-                      homeController.pageIndex.value = 3;
-                    },
-                    child: BottomNavBarItem(
-                      asset: MyImageURL.userAcconutIcon,
-                      controller: homeController,
-                      index: 3,
+                  Expanded(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment
+                          .spaceEvenly, // Adjust spacing as needed
+                      children: [
+                        Expanded(
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(15),
+                            onTap: () {
+                              if (homeController.pageIndex.value == 0) {
+                                Get.find<HomeScrollController>().scrollToTop();
+                              }
+                              homeController.pageIndex.value = 0;
+                            },
+                            child: BottomNavBarItem(
+                              asset: MyImageURL.homeNew,
+                              controller: homeController,
+                              index: 0,
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(15),
+                            onTap: () {
+                              homeController.pageIndex.value = 1;
+                            },
+                            child: BottomNavBarItem(
+                              asset: MyImageURL.billboardIcon,
+                              controller: homeController,
+                              index: 1,
+                            ),
+                          ),
+                        ),
+                        // Add SizedBox for spacing
+                        const SizedBox(width: Insets.i40),
+                        Expanded(
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(15),
+                            onTap: () {
+                              homeController.pageIndex.value = 2;
+                            },
+                            child: BottomNavBarItem(
+                              asset: MyImageURL.debatesIcon,
+                              controller: homeController,
+                              index: 2,
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(15),
+                            onTap: () {
+                              homeController.pageIndex.value = 3;
+                            },
+                            child: BottomNavBarItem(
+                              asset: MyImageURL.userAcconutIcon,
+                              controller: homeController,
+                              index: 3,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -127,11 +148,11 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
               visible: MediaQuery.of(context).viewInsets.bottom == 0.0,
               child: FloatingActionButton(
                 onPressed: () {
-                  Get.to(() => CreateNewFeedScreen(
-                        selectedType: 0,
-                        fromVideoRecording: false,
-                      ));
-                  // Get.to(() => const CreatePage());
+                  // Get.to(() => CreateNewFeedScreen(
+                  //       selectedType: 0,
+                  //       fromVideoRecording: false,
+                  //     ));
+                  Get.to(() => const CreatePage());
                 },
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(100)),
@@ -319,31 +340,27 @@ class BottomNavBarItem extends StatelessWidget {
                   decoration: BoxDecoration(
                       shape: BoxShape.circle, color: MyColors.greenColor),
                 )
-              : SizedBox(
+              : const SizedBox(
                   height: 8,
                   width: 8,
                 ),
-          SizedBox(height: Insets.i10),
+          const SizedBox(height: Insets.i10),
           index == 3
-              ? Container(
-                  child: Image.asset(
-                    asset,
-                    color: controller.pageIndex.value == index
-                        ? MyColors.greenColor
-                        : MyColors.grayColor,
-                    height: 25,
-                    width: 40,
-                  ),
+              ? Image.asset(
+                  asset,
+                  color: controller.pageIndex.value == index
+                      ? MyColors.greenColor
+                      : MyColors.grayColor,
+                  height: 25,
+                  width: 40,
                 )
-              : Container(
-                  child: SvgPicture.asset(
-                    asset,
-                    color: controller.pageIndex.value == index
-                        ? MyColors.greenColor
-                        : MyColors.grayColor,
-                    height: size,
-                    width: size,
-                  ),
+              : SvgPicture.asset(
+                  asset,
+                  color: controller.pageIndex.value == index
+                      ? MyColors.greenColor
+                      : MyColors.grayColor,
+                  height: size,
+                  width: size,
                 ),
         ],
       ),

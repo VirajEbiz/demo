@@ -46,8 +46,6 @@ class SettingController extends GetxController {
           } else {
             Toaster().warning(response.message);
           }
-        } else if (response.code == "000") {
-          await settingHelpAPI(fromHelp);
         } else {
           Toaster().warning(response.message);
         }
@@ -72,8 +70,6 @@ class SettingController extends GetxController {
           response.message.contains("off")
               ? storage.write(MyStorage.notificationStatus, false)
               : storage.write(MyStorage.notificationStatus, true);
-        } else if (response.code == "000") {
-          await setNOtification();
         } else {
           Toaster().warning(response.message);
         }
@@ -96,8 +92,6 @@ class SettingController extends GetxController {
 
         if (response.status == "success") {
           Toaster().warning(response.message);
-        } else if (response.code == "000") {
-          await logOutAPI();
         } else {
           Toaster().warning(response.message);
         }
@@ -119,8 +113,6 @@ class SettingController extends GetxController {
           Toaster().warning(response.message);
           Get.offAll(() => LoginPage());
           Toaster().warning(response.message);
-        } else if (response.code == "000") {
-          await deleteUserAccountAPI();
         } else {
           Toaster().warning(response.message);
         }

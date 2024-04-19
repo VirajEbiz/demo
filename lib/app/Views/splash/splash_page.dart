@@ -4,7 +4,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:watermel/app/Views/auth/login_controller.dart';
 import 'package:watermel/app/Views/auth/login_page.dart';
 import 'package:watermel/app/Views/home_bottom_bar/home_page.dart';
-import 'package:watermel/app/Views/home_bottom_bar/homebottom_controller.dart';
 import 'package:watermel/app/Views/intro/intro_page.dart';
 import 'package:watermel/app/utils/preference.dart';
 import 'package:watermel/app/utils/toast.dart';
@@ -38,8 +37,6 @@ class _SplashPageState extends State<SplashPage> {
       var token = await MyStorage.read(MyStorage.token);
       var userId = await MyStorage.read(MyStorage.userId);
       if (token != null && userId != null && token != "" && userId != "") {
-        HomeController homeController = Get.put(HomeController());
-
         Get.offAll(() => HomePage());
       } else {
         prefs.getBool('first_run1') ?? true == true

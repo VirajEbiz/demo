@@ -21,6 +21,7 @@ class UserProfileData {
   final bool? followRequestStatus;
   final bool? followReqBack;
   // final bool? followStatus;
+  final int? rank;
 
   UserProfileData({
     this.id,
@@ -43,6 +44,7 @@ class UserProfileData {
     this.followerNetworkID,
     this.followingNetworkID,
     // this.followRequestStatus,
+    this.rank,
   });
 
   factory UserProfileData.fromRawJson(String str) =>
@@ -63,7 +65,7 @@ class UserProfileData {
         profilePicture: json["profile_picture"],
         coverPicture: json["cover_picture"],
         displayName: json["display_name"],
-        noOfInfluencer: json["no_of_influencer"],
+        noOfInfluencer: json["influencer_score"],
         specificUserPrivacy: json["specific_user_privacy"],
         totalSeeds: json["total_seeds"],
         shareProfileUrl: json["share_profile_url"],
@@ -71,6 +73,7 @@ class UserProfileData {
         followRequestStatus: json["follow_request_status"],
         followReqBack: json["follow_back_status"],
         // followStatus: json["follow_status"],
+        rank: json["rank"],
       );
 
   factory UserProfileData.fromFollowerJson(Map<String, dynamic> json) =>
@@ -84,6 +87,7 @@ class UserProfileData {
         specificUserPrivacy: json["follower"]["specific_user_privacy"],
         totalSeeds: json["follower"]["total_seeds"],
         shareProfileUrl: json["follower"]["share_profile_url"],
+        rank: json["rank"],
       );
 
   factory UserProfileData.fromFollowingJson(Map<String, dynamic> json) =>
@@ -97,6 +101,7 @@ class UserProfileData {
         specificUserPrivacy: json["following"]["specific_user_privacy"],
         totalSeeds: json["following"]["total_seeds"],
         shareProfileUrl: json["following"]["share_profile_url"],
+        rank: json["rank"],
       );
 
   Map<String, dynamic> toJson() => {
@@ -109,13 +114,14 @@ class UserProfileData {
         "profile_picture": profilePicture,
         "cover_picture": coverPicture,
         "display_name": displayName,
-        "no_of_influencer": noOfInfluencer,
+        "influencer_score": noOfInfluencer,
         "specific_user_privacy": specificUserPrivacy,
         "total_seeds": totalSeeds,
         "share_profile_url": shareProfileUrl,
         "follow_status": followStatus,
         "follow_request_status": followRequestStatus,
-        "follow_back_status": followReqBack
+        "follow_back_status": followReqBack,
         //  "follow_request_status": followRequestStatus
+        "rank": rank,
       };
 }

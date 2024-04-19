@@ -4,10 +4,13 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
+import 'package:hashtagable_v3/hashtagable.dart';
 import 'package:video_player/video_player.dart';
 import 'package:watermel/app/Views/Home%20Feed/controllers/feed_home_controller.dart';
 import 'package:watermel/app/Views/Home%20Feed/home_widgets/share_bottom_sheet.dart';
 import 'package:watermel/app/Views/addComment/addcomments.dart';
+import 'package:watermel/app/Views/home_bottom_bar/home_page.dart';
+import 'package:watermel/app/Views/home_bottom_bar/homebottom_controller.dart';
 import 'package:watermel/app/Views/user_profile/user_profile_backup.dart';
 import 'package:watermel/app/core/helpers/contants.dart';
 import 'package:watermel/app/utils/preference.dart';
@@ -64,13 +67,20 @@ class _FeedDetailScreenState extends State<FeedDetailScreen> {
   late VideoPlayerController _controller;
   HomeFeedController homeFeedController = Get.put(HomeFeedController());
 
+  @override
   void initState() {
     super.initState();
     _isPlaying.value = false;
-    getData();
-    widget.mediaURL == null || widget.mediaURL == ""
-        ? isMediaAvilable.value = false
-        : isMediaAvilable.value = true;
+    WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+      getData();
+      widget.mediaURL == null || widget.mediaURL == ""
+          ? isMediaAvilable.value = false
+          : isMediaAvilable.value = true;
+
+      if (widget.mediaType == 1) {
+        setFile();
+      }
+    });
   }
 
   RxBool isViewMore = false.obs;
@@ -110,7 +120,6 @@ class _FeedDetailScreenState extends State<FeedDetailScreen> {
             ..addListener(() {
               setState(() {});
             });
-      ;
       await _controller.play();
     } catch (e) {
       Toaster().warning(e.toString());
@@ -177,6 +186,7 @@ class _FeedDetailScreenState extends State<FeedDetailScreen> {
   RxString position_min = "0:00:00".obs;
 
   setAudioFile(url) async {
+    print("Check data ==> 111 ${url}");
     try {
       await _audioPlayer.play(DeviceFileSource(url)).whenComplete(() {
         _isShowSlider.value = true;
@@ -519,11 +529,13 @@ class _FeedDetailScreenState extends State<FeedDetailScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             SvgPicture.asset(
-                              MyImageURL.likecomment,
+                              widget.myReaction == 'love'
+                                  ? MyImageURL.LikedImage
+                                  : MyImageURL.like,
                               height: Insets.i25,
                               width: Insets.i25,
                               color: widget.myReaction != null
-                                  ? Colors.red
+                                  ? null
                                   : Colors.white,
                             ),
                             const SizedBox(
@@ -556,13 +568,36 @@ class _FeedDetailScreenState extends State<FeedDetailScreen> {
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   Obx(
-                    () => MyText(
-                      txtAlign: TextAlign.left,
-                      text_name: viewText(
+                    // () => MyText(
+                    //   txtAlign: TextAlign.left,
+                    //   text_name: viewText(
+                    //       widget.caption.toString(), !isViewMore.value),
+                    //   txtcolor: MyColors.whiteColor,
+                    //   fontWeight: FontWeight.w500,
+                    //   txtfontsize: FontSizes.s14,
+                    // ),
+                    () => HashTagText(
+                      text: viewText(
                           widget.caption.toString(), !isViewMore.value),
-                      txtcolor: MyColors.whiteColor,
-                      fontWeight: FontWeight.w500,
-                      txtfontsize: FontSizes.s14,
+                      basicStyle: TextStyle(
+                        fontWeight: FontWeight.w400,
+                        fontSize: FontSizes.s14,
+                        color: MyColors.whiteColor,
+                      ),
+                      decoratedStyle: TextStyle(
+                        fontWeight: FontWeight.w400,
+                        fontSize: FontSizes.s14,
+                        color: MyColors.greenColor,
+                      ),
+                      onTap: (text) {
+                        homeFeedController.selectedTopic.value =
+                            text.replaceAll('#', '');
+                        homeFeedController.getSeedsByTopic(true);
+                        HomeController homeController =
+                            Get.put(HomeController());
+                        homeController.pageIndex.value = 0;
+                        Get.back();
+                      },
                     ),
                   ),
                   widget.caption!.length > 50
@@ -677,7 +712,7 @@ class _FeedDetailScreenState extends State<FeedDetailScreen> {
   Widget ImageView() {
     return CustomImageView(
       isProfilePicture: false,
-      imagePathOrUrl: "$baseUrl${widget.mediaURL}",
+      imagePathOrUrl: "$baseForImage${widget.mediaURL}",
       fit: BoxFit.fitWidth,
     );
   }
@@ -786,8 +821,10 @@ class _FeedDetailScreenState extends State<FeedDetailScreen> {
               () => _isShowSlider.value == true
                   ? Slider.adaptive(
                       min: 0.0,
-                      value: _controller.value.position.inMilliseconds /
-                          _controller.value.duration.inMilliseconds,
+                      value: _controller.value.duration.inMilliseconds != 0
+                          ? _controller.value.position.inMilliseconds /
+                              _controller.value.duration.inMilliseconds
+                          : 0.0,
                       onChanged: (value) {
                         print(
                             "Check ==> ${_controller.value.duration.inSeconds}");

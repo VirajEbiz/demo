@@ -47,8 +47,6 @@ class BookmarkController extends GetxController {
           bookmarkList.refresh();
           isLoadingBookMark.value = false;
           hideLoader();
-        } else if (response.code == "000") {
-          await getBookmarkListAPI(selectedI);
         } else {
           Toaster().warning(response.message);
         }
@@ -89,7 +87,7 @@ class BookmarkController extends GetxController {
                   displayname:
                       profilePostDetails.value.user?.userprofile?.displayName ??
                           "",
-                  feedID: profilePostDetails.value.id,
+                  feedID: profilePostDetails.value.id!,
                   isBookmark: profilePostDetails.value.bookmark,
                   likeCount: profilePostDetails.value.reactionsCount,
                   mediaType: 0,
@@ -106,6 +104,7 @@ class BookmarkController extends GetxController {
                   userName: profilePostDetails.value.user?.username ?? "",
                   userProfile: profilePostDetails
                       .value.user?.userprofile!.profilePicture,
+                  isPrivate: profilePostDetails.value.isPrivate ?? false,
                 ));
           }
           if (fromWhere == 1) {
@@ -122,7 +121,7 @@ class BookmarkController extends GetxController {
                   displayname:
                       profilePostDetails.value.user?.userprofile?.displayName ??
                           "",
-                  feedID: profilePostDetails.value.id,
+                  feedID: profilePostDetails.value.id!,
                   isBookmark: profilePostDetails.value.bookmark,
                   likeCount: profilePostDetails.value.reactionsCount,
                   mediaType: 1,
@@ -135,6 +134,7 @@ class BookmarkController extends GetxController {
                   userName: profilePostDetails.value.user?.username ?? "",
                   userProfile: profilePostDetails
                       .value.user?.userprofile!.profilePicture,
+                  isPrivate: profilePostDetails.value.isPrivate ?? false,
                 ));
           }
           if (fromWhere == 2) {
@@ -151,7 +151,7 @@ class BookmarkController extends GetxController {
                   displayname:
                       profilePostDetails.value.user?.userprofile?.displayName ??
                           "",
-                  feedID: profilePostDetails.value.id,
+                  feedID: profilePostDetails.value.id!,
                   isBookmark: profilePostDetails.value.bookmark,
                   likeCount: profilePostDetails.value.reactionsCount,
                   mediaType: 2,
@@ -164,11 +164,10 @@ class BookmarkController extends GetxController {
                   userName: profilePostDetails.value.user?.username ?? "",
                   userProfile: profilePostDetails
                       .value.user?.userprofile!.profilePicture,
+                  isPrivate: profilePostDetails.value.isPrivate ?? false,
                 ));
           }
           isLoading.value = false;
-        } else if (response.code == "000") {
-          await getUserPotDetailsAPI(feedId, fromWhere, ind);
         } else {
           Toaster().warning(response.message);
         }

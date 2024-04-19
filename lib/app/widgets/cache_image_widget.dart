@@ -1,11 +1,7 @@
-import 'dart:developer';
 import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get_storage/get_storage.dart';
-import 'package:shimmer/shimmer.dart';
-import 'package:watermel/app/utils/theme/fonts.dart';
 import 'package:watermel/app/utils/theme/images.dart';
 import 'package:watermel/app/widgets/widget_extenstion.dart';
 
@@ -64,7 +60,9 @@ class CustomImageView extends StatelessWidget {
     } else {
       return ClipRRect(
         borderRadius: BorderRadius.circular(radius ?? 0),
-        child: imagePathOrUrl != null && imagePathOrUrl != ""
+        child: imagePathOrUrl != null &&
+                imagePathOrUrl != "" &&
+                imagePathOrUrl != "null"
             ? Image.file(
                 File(imagePathOrUrl!),
                 fit: fit ?? BoxFit.cover,

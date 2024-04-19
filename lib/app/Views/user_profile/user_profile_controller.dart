@@ -51,34 +51,31 @@ class UserProfileController extends GetxController {
         showLoader();
         var response = await ApiManager()
             .call('${baseUrl}auth/profile/$name/', "", ApiType.get);
-
-        print("Check data =-=-==-=-> ${response.status}");
-        print("Check data =-=-==-=-> ${response.data.toString()}");
-        print("Check data =-=-00==-=-> ${response.code == "000"}");
         if (response.status == "success") {
+          print("userProfileData............${response.data}");
           userProfileData.value = UserProfileData.fromJson(response.data);
           if (storage.read(MyStorage.userName) == name) {
             storage.write(MyStorage.userProfile,
                 "${userProfileData.value.profilePicture}");
             storage.write(
                 MyStorage.displayName, userProfileData.value.displayName);
+            storage.write(MyStorage.bio, userProfileData.value.bio);
           }
+
           page = 1;
+
           userProfileData.value.specificUserPrivacy == false
               ? await getuserFeedData(
                   userProfileData.value.username, "read", true, false, page)
               : null;
           update();
-        } else if (response.code == "000") {
-          await getUserprofile(name);
         } else {
           Toaster().warning(response.message);
         }
       } catch (e, f) {
         hideLoader();
 
-        MyPrint(tag: "7888 catch", value: e.toString());
-        MyPrint(tag: "7888 catch", value: f.toString());
+        MyPrint(tag: "catch", value: e.toString());
       }
     }
   }
@@ -117,6 +114,7 @@ class UserProfileController extends GetxController {
     dio.FormData formData1 = dio.FormData.fromMap(jsonDB);
 
     {
+      print("request param........${type}.....${jsonDB}");
       try {
         showLoader();
 
@@ -149,12 +147,10 @@ class UserProfileController extends GetxController {
             hideLoader();
           }
           podcastFeedData.refresh();
-
+          print(
+              "imageFeedData............${watchFeedData.length}..>${imageFeedData.length}");
           update();
           // Toaster().warning(response.message);
-        } else if (response.code == "000") {
-          await getuserFeedData(
-              userName, type, fromFirstTime, fromPagination, page);
         } else {
           Toaster().warning(response.message);
         }
@@ -203,6 +199,7 @@ class UserProfileController extends GetxController {
       if (selectedFilePath.value != "") {
         Map<String, dynamic> jsonDB = {
           'display_name': displayNameController.text,
+          'bio': bioController.text,
           'is_private': isPrivate.value,
         };
         jsonDB['profile_picture'] = [
@@ -214,6 +211,7 @@ class UserProfileController extends GetxController {
       } else {
         Map<String, dynamic> jsonDB = {
           'display_name': displayNameController.text,
+          'bio': bioController.text,
           'is_private': isPrivate.value,
         };
 
@@ -228,12 +226,11 @@ class UserProfileController extends GetxController {
         storage.write(MyStorage.Accout_IsPrivate, response.data["is_private"]);
         storage.write(MyStorage.displayName, response.data["display_name"]);
         storage.write(MyStorage.userProfile, response.data["profile_picture"]);
+        storage.write(MyStorage.bio, response.data["bio"]);
         isPrivate.value = response.data["is_private"];
         await getUserprofile(storage.read(MyStorage.userName));
         Get.back(closeOverlays: true);
         // Toaster().warning(response.message.toString());
-      } else if (response.code == "000") {
-        await EditProfile();
       } else {
         Toaster().warning(response.message.toString());
       }
@@ -257,8 +254,6 @@ class UserProfileController extends GetxController {
         var response = await ApiManager().call(myUrl, formData, ApiType.post);
         if (response.status == "success") {
           await getUserprofile(userName);
-        } else if (response.code == "000") {
-          await FollowTheUsesr(userName);
         } else {
           Toaster().warning(response.message);
         }
@@ -290,8 +285,6 @@ class UserProfileController extends GetxController {
             //             homeFeedList[ind].bookmark == true ? false : true;
             //         homeFeedList.refresh();
           }
-        } else if (response.code == "000") {
-          await bookMarkTheFeed(feedID, ind);
         } else {
           Toaster().warning(response.message);
         }
@@ -323,8 +316,6 @@ class UserProfileController extends GetxController {
           // commentController.clear();
           await getComment(feedID, false);
           hideLoader();
-        } else if (response.code == "000") {
-          await addComment(feedID, ind);
         } else {
           Toaster().warning(response.message);
         }
@@ -345,7 +336,7 @@ class UserProfileController extends GetxController {
       getCommentListDataModel.refresh();
     }
     String myUrl = "$baseUrl$getCommentEndPoint$feedID/";
-
+    print("My URL ==> ${myUrl}");
     {
       try {
         showLoader();
@@ -360,8 +351,6 @@ class UserProfileController extends GetxController {
           }
           getCommentListDataModel.refresh();
           hideLoader();
-        } else if (response.code == "000") {
-          await getComment(feedID, fromMain);
         } else {
           Toaster().warning(response.message);
         }
@@ -397,8 +386,6 @@ class UserProfileController extends GetxController {
           //   homeFeedList[ind].reactionsCount = temp;
           //   homeFeedList.refresh();
           // }
-        } else if (response.code == "000") {
-          await reactionAPI(feedID, ind);
         } else {
           Toaster().warning(response.message);
         }
@@ -412,6 +399,8 @@ class UserProfileController extends GetxController {
   }
 
   Future getFollowersList() async {
+    followersList.clear();
+
     String formData = "";
     String myUrl =
         "$baseUrl$follow?follow_network=followers&page=${currentFollowersPage.value}";
@@ -427,8 +416,6 @@ class UserProfileController extends GetxController {
         }
 
         hideLoader();
-      } else if (response.code == "000") {
-        await getFollowersList();
       } else {
         Toaster().warning(response.message);
       }
@@ -440,6 +427,8 @@ class UserProfileController extends GetxController {
   }
 
   Future getFollowingList() async {
+    followingList.clear();
+
     String formData = "";
     String myUrl =
         "$baseUrl$follow?follow_network=following&page=${currentFollowingPage.value}";
@@ -455,8 +444,6 @@ class UserProfileController extends GetxController {
         }
 
         hideLoader();
-      } else if (response.code == "000") {
-        await getFollowingList();
       } else {
         Toaster().warning(response.message);
       }
@@ -477,8 +464,6 @@ class UserProfileController extends GetxController {
       if (response.status == "success") {
         hideLoader();
         return response.code;
-      } else if (response.code == "000") {
-        await removeFollower(id: id);
       } else {
         Toaster().warning(response.message);
       }

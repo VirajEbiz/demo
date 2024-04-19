@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 class UserLoginModel {
   String? token;
   String? refreshToken;

@@ -42,6 +42,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     userProfileController.isPrivate.value =
         storage.read(MyStorage.Accout_IsPrivate) ?? false;
     userProfileController.selectedFilePath.value = "";
+    userProfileController.bioController.text =
+        await MyStorage.read(MyStorage.bio) ?? "";
   }
 
   @override
@@ -57,11 +59,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Image.asset(
-                      "assets/images/watermel.png",
-                      // height: 140,
-                    ),
-                    const SizedBox(height: 32),
+                    // Image.asset(
+                    //   "assets/images/watermel.png",
+                    //   // height: 140,
+                    // ),
+                    // const SizedBox(height: 32),
                     Stack(
                       children: [
                         GestureDetector(
@@ -157,6 +159,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     TextFormField(
                       controller: userProfileController.displayNameController,
                       keyboardType: TextInputType.name,
+                      maxLines: 1,
+                      maxLength: 20,
                       decoration: textFieldDecoration.copyWith(
                         hintText: "Name",
                         labelText: "Display Name",
@@ -164,6 +168,26 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return "Please Unique Name";
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(
+                      height: 24,
+                    ),
+                    TextFormField(
+                      controller: userProfileController.bioController,
+                      maxLines: 4,
+                      maxLength: 150,
+                      keyboardType: TextInputType.multiline,
+                      decoration: textFieldDecoration.copyWith(
+                        hintText: "Bio",
+                        labelText: 'Bio',
+                        alignLabelWithHint: true,
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return "Please enter your bio";
                         }
                         return null;
                       },
@@ -268,7 +292,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           },
                         );
                       },
-                      child: const Text("Edit Profile"),
+                      child: const Text("Confirm"),
                     ),
                     const SizedBox(height: 20),
                   ],

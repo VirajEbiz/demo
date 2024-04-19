@@ -1,6 +1,8 @@
 import 'dart:developer';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:social_share/social_share.dart';
@@ -83,14 +85,16 @@ class _UserProfileScreenbackupState extends State<UserProfileScreenbackup>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: MyColors.whiteColor,
-      appBar: appbarPreferredSizeAction(
-          "", true, isActionIcon: false, "My Draft", () {}, backonTap: () {
-        widget.fromProfile == false
-            ? Get.back()
-            : homeController.pageIndex.value = 0;
-        homeController.update();
-        Get.back();
-      }),
+      appBar: widget.fromProfile ?? false
+          ? null
+          : appbarPreferredSizeAction(
+              "", true, isActionIcon: false, "My Draft", () {}, backonTap: () {
+              widget.fromProfile == false
+                  ? Get.back()
+                  : homeController.pageIndex.value = 0;
+              homeController.update();
+              Get.back();
+            }),
       body: GetBuilder<UserProfileController>(builder: (_) => homeBody()),
     );
   }
@@ -146,19 +150,39 @@ class _UserProfileScreenbackupState extends State<UserProfileScreenbackup>
             mainAxisSize: MainAxisSize.min,
             //shrinkWrap: true,
             children: [
+              if (widget.fromProfile ?? false)
+                const SizedBox(
+                  height: Insets.i40,
+                ),
               Center(
                 child: Obx(
                   () => MyText(
-                    text_name:
-                        userProfileController.userProfileData.value.username ==
-                                null
-                            ? "N/A"
-                            : userProfileController
-                                    .userProfileData.value.username ??
-                                "N/A",
+                    text_name: userProfileController
+                                .userProfileData.value.displayName ==
+                            null
+                        ? "N/A"
+                        : userProfileController
+                                .userProfileData.value.displayName ??
+                            "N/A",
                     fontWeight: FontWeight.w600,
                     txtcolor: MyColors.blackColor,
                     txtfontsize: FontSizes.s16,
+                  ),
+                ),
+              ),
+              Center(
+                child: Obx(
+                  () => SizedBox(
+                    width: Get.width * 0.5,
+                    child: MyText(
+                      maxline: 2,
+                      text_name:
+                          "@${userProfileController.userProfileData.value.username}" ??
+                              "N/A",
+                      fontWeight: FontWeight.w400,
+                      txtcolor: MyColors.grayColor,
+                      txtfontsize: FontSizes.s14,
+                    ),
                   ),
                 ),
               ),
@@ -173,12 +197,15 @@ class _UserProfileScreenbackupState extends State<UserProfileScreenbackup>
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         InkWell(
-                          onTap: () => Get.off(() => FollowersPage(
-                                username: userProfileController
-                                        .userProfileData.value.username ??
-                                    "N/A",
-                                isFollowers: true,
-                              )),
+                          onTap: () => widget.fromProfile ?? false
+                              ? Get.off(() => FollowersPage(
+                                    fromProfile: widget.fromProfile ?? false,
+                                    username: userProfileController
+                                            .userProfileData.value.username ??
+                                        "N/A",
+                                    isFollowers: true,
+                                  ))
+                              : null,
                           child: Column(
                             children: [
                               Obx(
@@ -207,12 +234,15 @@ class _UserProfileScreenbackupState extends State<UserProfileScreenbackup>
                           ),
                         ),
                         InkWell(
-                          onTap: () => Get.off(() => FollowersPage(
-                                username: userProfileController
-                                        .userProfileData.value.username ??
-                                    "N/A",
-                                isFollowers: false,
-                              )),
+                          onTap: () => widget.fromProfile ?? false
+                              ? Get.off(() => FollowersPage(
+                                    fromProfile: widget.fromProfile ?? false,
+                                    username: userProfileController
+                                            .userProfileData.value.username ??
+                                        "N/A",
+                                    isFollowers: false,
+                                  ))
+                              : null,
                           child: Column(
                             children: [
                               Obx(
@@ -310,7 +340,7 @@ class _UserProfileScreenbackupState extends State<UserProfileScreenbackup>
                                     ? "0"
                                     : userProfileController
                                         .userProfileData.value.noOfInfluencer
-                                        .toString(),
+                                        .toStringAsFixed(2),
                                 fontWeight: FontWeight.w600,
                                 txtcolor: MyColors.blackColor,
                                 txtfontsize: FontSizes.s18,
@@ -329,20 +359,23 @@ class _UserProfileScreenbackupState extends State<UserProfileScreenbackup>
                   ],
                 ),
               ),
-              const SizedBox(height: Insets.i15),
-              Center(
-                child: Obx(
-                  () => SizedBox(
-                    width: Get.width * 0.5,
-                    child: MyText(
-                      maxline: 2,
-                      text_name: userProfileController
-                              .userProfileData.value.displayName ??
-                          "N/A",
-                      fontWeight: FontWeight.w400,
-                      txtcolor: MyColors.grayColor,
-                      txtfontsize: FontSizes.s14,
-                    ),
+              SizedBox(
+                width: Get.width,
+                child: Padding(
+                  padding: const EdgeInsets.only(
+                      top: Insets.i40, left: Insets.i20, right: Insets.i20),
+                  child: Wrap(
+                    children: [
+                      MyText(
+                        text_name:
+                            userProfileController.userProfileData.value.bio ??
+                                "",
+                        fontWeight: FontWeight.w400,
+                        txtcolor: MyColors.blackColor,
+                        txtfontsize: FontSizes.s14,
+                        txtAlign: TextAlign.left,
+                      )
+                    ],
                   ),
                 ),
               ),
@@ -814,7 +847,11 @@ class _UserProfileScreenbackupState extends State<UserProfileScreenbackup>
               flex: 2,
               child: GestureDetector(
                 onTap: () {
-                  Get.offAll(() => HomePage());
+                  String textToShare = userProfileController
+                          .userProfileData.value.shareProfileUrl ??
+                      "";
+                  SocialShare.shareOptions(textToShare);
+                  // Share.share(textToShare);
                 },
                 child: Container(
                   height: Get.height * 0.05,
@@ -825,8 +862,9 @@ class _UserProfileScreenbackupState extends State<UserProfileScreenbackup>
                   child: Padding(
                       padding: const EdgeInsets.all(10),
                       child: SvgPicture.asset(
-                        MyImageURL.accountImage,
+                        MyImageURL.sharePost,
                         height: Insets.i10,
+                        color: MyColors.whiteColor,
                       )),
                 ),
               )),

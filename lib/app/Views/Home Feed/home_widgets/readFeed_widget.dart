@@ -2,9 +2,13 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
+import 'package:hashtagable_v3/hashtagable.dart';
 import 'package:watermel/app/Views/Home%20Feed/controllers/feed_home_controller.dart';
+import 'package:watermel/app/Views/Home%20Feed/scroll_feed_page.dart';
 import 'package:watermel/app/Views/Home%20Feed/home_widgets/share_bottom_sheet.dart';
 import 'package:watermel/app/Views/Home%20Feed/home_widgets/feed_detail_screen.dart';
+import 'package:watermel/app/Views/home_bottom_bar/home_page.dart';
+import 'package:watermel/app/Views/home_bottom_bar/homebottom_controller.dart';
 import 'package:watermel/app/Views/user_profile/user_profile_backup.dart';
 import 'package:watermel/app/core/helpers/contants.dart';
 import 'package:watermel/app/utils/preference.dart';
@@ -151,16 +155,39 @@ class _ReadFeedWidgetState extends State<ReadFeedWidget> {
                   const SizedBox(
                     height: Insets.i5,
                   ),
-                  Obx(() => MyText(
-                        text_name: viewText(
-                            widget.description,
-                            homeFeedController
-                                .homeFeedList[widget.index!].isMore!.value),
+                  Obx(
+                    // () => MyText(
+                    //   text_name: viewText(
+                    //       widget.description,
+                    //       homeFeedController
+                    //           .homeFeedList[widget.index!].isMore!.value),
+                    //   fontWeight: FontWeight.w400,
+                    //   txtfontsize: FontSizes.s14,
+                    //   txtcolor: MyColors.grayColor,
+                    //   txtAlign: TextAlign.left,
+                    // ),
+                    () => HashTagText(
+                      text: viewText(
+                          widget.description,
+                          homeFeedController
+                              .homeFeedList[widget.index!].isMore!.value),
+                      basicStyle: TextStyle(
                         fontWeight: FontWeight.w400,
-                        txtfontsize: FontSizes.s14,
-                        txtcolor: MyColors.grayColor,
-                        txtAlign: TextAlign.left,
-                      )),
+                        fontSize: FontSizes.s14,
+                        color: MyColors.grayColor,
+                      ),
+                      decoratedStyle: TextStyle(
+                        fontWeight: FontWeight.w400,
+                        fontSize: FontSizes.s14,
+                        color: MyColors.greenColor,
+                      ),
+                      onTap: (text) {
+                        homeFeedController.selectedTopic.value =
+                            text.replaceAll('#', '');
+                        homeFeedController.getSeedsByTopic(true);
+                      },
+                    ),
+                  ),
                   widget.description!.length > 50
                       ? Obx(() => InkWell(
                             onTap: () {
@@ -269,78 +296,68 @@ class _ReadFeedWidgetState extends State<ReadFeedWidget> {
                           : Container(),
                   InkWell(
                     onTap: () {
-                      log("im tapped ==> ${homeFeedController.homeFeedList[widget.index!].mediaData!.first.video}");
-                      Get.to(() => FeedDetailScreen(
-                            myReaction: homeFeedController
-                                .homeFeedList[widget.index!].myReaction,
-                            createTime: homeFeedController
-                                .homeFeedList[widget.index!].createdAt,
-                            shareURL: homeFeedController
-                                .homeFeedList[widget.index!].shareURL,
-                            commentCount: homeFeedController
-                                .homeFeedList[widget.index!].commentsCount,
-                            isBookmark: homeFeedController
-                                .homeFeedList[widget.index!].bookmark,
-                            likeCount: homeFeedController
-                                .homeFeedList[widget.index!].reactionsCount,
-                            thumbnail: homeFeedController
-                                        .homeFeedList[widget.index!]
-                                        .thumbnailURL ==
-                                    null
-                                ? ""
-                                : "$baseUrl${homeFeedController.homeFeedList[widget.index!].thumbnailURL}",
-                            caption: homeFeedController
-                                .homeFeedList[widget.index!].caption,
-                            feedID: homeFeedController
-                                .homeFeedList[widget.index!].id,
-                            mediaURL: homeFeedController.tempList.any(
-                                    (element) =>
-                                        element ==
-                                        homeFeedController
-                                            .homeFeedList[widget.index!]
-                                            .mediaData!
-                                            .first
-                                            .video
-                                            ?.split('.')
-                                            .last)
-                                ? "$baseUrl${homeFeedController.homeFeedList[widget.index!].mediaData!.first.video}"
-                                : homeFeedController.homeFeedList[widget.index!]
-                                    .mediaData!.first.image,
-                            mediaType: homeFeedController.tempList.any(
-                                    (element) =>
-                                        element ==
-                                        homeFeedController
-                                            .homeFeedList[widget.index!]
-                                            .mediaData!
-                                            .first
-                                            .video
-                                            ?.split('.')
-                                            .last)
-                                ? 1
-                                : 0,
-                            index: widget.index,
-                            userName: homeFeedController
-                                .homeFeedList[widget.index!].user!.username,
-                            displayname: homeFeedController
-                                .homeFeedList[widget.index!]
-                                .user!
-                                .userprofile!
-                                .displayName,
-                            userProfile: homeFeedController
-                                            .homeFeedList[widget.index!]
-                                            .user!
-                                            .userprofile!
-                                            .profilePicture ==
-                                        null ||
-                                    homeFeedController
-                                            .homeFeedList[widget.index!]
-                                            .user!
-                                            .userprofile!
-                                            .profilePicture ==
-                                        ""
-                                ? ""
-                                : "$baseUrl${homeFeedController.homeFeedList[widget.index!].user!.userprofile!.profilePicture}",
+                      homeFeedController.viewedPost(
+                          homeFeedController.homeFeedList[widget.index!].id!);
+                      Get.to(() => ScrollFeedPage(
+                            firstIndex: widget.index!,
                           ));
+                      // Get.to(() => FeedDetailScreen(
+                      //       createTime: homeFeedController
+                      //           .homeFeedList[widget.index!].createdAt,
+                      //       shareURL: homeFeedController
+                      //           .homeFeedList[widget.index!].shareURL,
+                      //       commentCount: homeFeedController
+                      //           .homeFeedList[widget.index!].commentsCount,
+                      //       isBookmark: homeFeedController
+                      //           .homeFeedList[widget.index!].bookmark,
+                      //       likeCount: homeFeedController
+                      //           .homeFeedList[widget.index!].reactionsCount,
+                      //       thumbnail: homeFeedController
+                      //                   .homeFeedList[widget.index!]
+                      //                   .thumbnailURL ==
+                      //               null
+                      //           ? ""
+                      //           : "$baseForImage${homeFeedController.homeFeedList[widget.index!].thumbnailURL}",
+                      //       caption: homeFeedController
+                      //           .homeFeedList[widget.index!].caption,
+                      //       feedID: homeFeedController
+                      //           .homeFeedList[widget.index!].id,
+                      //       mediaURL: homeFeedController.tempList.any(
+                      //               (element) =>
+                      //                   element ==
+                      //                   homeFeedController
+                      //                       .homeFeedList[widget.index!]
+                      //                       .mediaData!
+                      //                       .first
+                      //                       .video
+                      //                       ?.split('.')
+                      //                       .last)
+                      //           ? "$baseForImage${homeFeedController.homeFeedList[widget.index!].mediaData!.first.video}"
+                      //           : homeFeedController.homeFeedList[widget.index!]
+                      //               .mediaData!.first.image,
+                      //       mediaType: homeFeedController.tempList.any(
+                      //               (element) =>
+                      //                   element ==
+                      //                   homeFeedController
+                      //                       .homeFeedList[widget.index!]
+                      //                       .mediaData!
+                      //                       .first
+                      //                       .video
+                      //                       ?.split('.')
+                      //                       .last)
+                      //           ? 1
+                      //           : 0,
+                      //       index: widget.index,
+                      //       userName: homeFeedController
+                      //           .homeFeedList[widget.index!].user!.username,
+                      //       displayname: homeFeedController
+                      //           .homeFeedList[widget.index!]
+                      //           .user!
+                      //           .userprofile!
+                      //           .displayName,
+                      //       userProfile:
+                      //           "$baseForImage${homeFeedController.homeFeedList[widget.index!].user!.userprofile!.profilePicture}",
+                      //     ));
                     },
                     child: Stack(
                       clipBehavior: Clip.none,
@@ -535,7 +552,7 @@ class _ReadFeedWidgetState extends State<ReadFeedWidget> {
               isProfilePicture: true,
               imagePathOrUrl: userProfileImage == "null"
                   ? ""
-                  : "$baseUrl${userProfileImage}",
+                  : "$baseForImage$userProfileImage",
               radius: 100),
         ),
         const SizedBox(
@@ -546,30 +563,19 @@ class _ReadFeedWidgetState extends State<ReadFeedWidget> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              width: Get.width * 0.6,
+              width: Get.width * 0.63,
               child: Row(
                 children: [
-                  userName.toString().characters.length > 25
-                      ? Expanded(
-                          child: MyText(
-                            txtAlign: TextAlign.left,
-                            maxline: 2,
-                            text_name: userName,
-                            txtcolor: MyColors.blackColor,
-                            fontWeight: FontWeight.w500,
-                            txtfontsize: FontSizes.s14,
-                          ),
-                        )
-                      : MyText(
-                          txtAlign: TextAlign.left,
-                          maxline: 2,
-                          text_name: userName,
-                          txtcolor: MyColors.blackColor,
-                          fontWeight: FontWeight.w500,
-                          txtfontsize: FontSizes.s14,
-                        ),
+                  MyText(
+                    txtAlign: TextAlign.left,
+                    maxline: 2,
+                    text_name: userName,
+                    txtcolor: MyColors.blackColor,
+                    fontWeight: FontWeight.w500,
+                    txtfontsize: FontSizes.s14,
+                  ),
                   const SizedBox(
-                    width: Insets.i5,
+                    width: Insets.i10,
                   ),
                   homeFeedController.homeFeedList[widget.index!].owner ==
                               null ||

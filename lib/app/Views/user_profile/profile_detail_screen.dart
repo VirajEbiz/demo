@@ -1,19 +1,25 @@
 import 'dart:developer';
 import 'dart:io';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:camerawesome/camerawesome_plugin.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
+import 'package:hashtagable_v3/widgets/hashtag_text.dart';
 import 'package:video_player/video_player.dart';
 import 'package:watermel/app/Views/Home%20Feed/controllers/feed_home_controller.dart';
+import 'package:watermel/app/Views/Home%20Feed/feed_screen.dart';
 import 'package:watermel/app/Views/Home%20Feed/home_widgets/share_bottom_sheet.dart';
 import 'package:watermel/app/Views/addComment/addcomments.dart';
 import 'package:watermel/app/Views/auth/login_controller.dart';
 import 'package:watermel/app/Views/bookmark/bookmark_controller.dart';
+import 'package:watermel/app/Views/draft/edit_draft-screen.dart';
 import 'package:watermel/app/Views/home_bottom_bar/home_page.dart';
+import 'package:watermel/app/Views/home_bottom_bar/homebottom_controller.dart';
+import 'package:watermel/app/Views/user_profile/edit_post_screen.dart';
 import 'package:watermel/app/Views/user_profile/user_profile_backup.dart';
 import 'package:watermel/app/core/helpers/contants.dart';
-import 'package:watermel/app/models/bookmark_list_model.dart';
 import 'package:watermel/app/utils/preference.dart';
 import 'package:watermel/app/utils/theme/colors.dart';
 import 'package:watermel/app/utils/theme/fonts.dart';
@@ -27,34 +33,36 @@ import 'package:watermel/main.dart';
 
 //! mediatype 0 = image, 1 = video, 2= audio
 class ProfileFeedDetailScreen extends StatefulWidget {
-  ProfileFeedDetailScreen(
-      {super.key,
-      this.index,
-      this.fromMain,
-      this.shareURL,
-      this.mediaURL,
-      this.userName,
-      this.caption,
-      this.userProfile,
-      this.displayname,
-      this.thumbnail,
-      this.mediaType,
-      this.commentCount,
-      this.feedID,
-      this.isBookmark,
-      this.containComment,
-      this.myReaction,
-      this.createTime,
-      this.fromBookmark,
-      this.bookmarkList,
-      this.likeCount});
+  ProfileFeedDetailScreen({
+    super.key,
+    this.index,
+    this.fromMain,
+    this.shareURL,
+    this.mediaURL,
+    this.userName,
+    this.caption,
+    this.userProfile,
+    this.displayname,
+    this.thumbnail,
+    required this.mediaType,
+    this.commentCount,
+    required this.feedID,
+    this.isBookmark,
+    this.containComment,
+    this.myReaction,
+    this.createTime,
+    this.fromBookmark,
+    this.bookmarkList,
+    this.likeCount,
+    required this.isPrivate,
+  });
   int? index;
   String? mediaURL;
   int? commentCount;
   bool? containComment;
   int? likeCount;
   bool? isBookmark;
-  int? feedID;
+  int feedID;
   String? shareURL;
   bool? fromMain;
   String? userProfile;
@@ -62,11 +70,13 @@ class ProfileFeedDetailScreen extends StatefulWidget {
   String? caption;
   String? thumbnail;
   String? displayname;
-  int? mediaType;
+  int mediaType;
   dynamic myReaction;
   DateTime? createTime;
   bool? fromBookmark;
   List? bookmarkList;
+  bool isPrivate;
+
   @override
   State<ProfileFeedDetailScreen> createState() =>
       _ProfileFeedDetailScreenState();
@@ -86,7 +96,6 @@ class _ProfileFeedDetailScreenState extends State<ProfileFeedDetailScreen> {
     WidgetsBinding.instance!.addPostFrameCallback((_) {
       widget.containComment == true ? setBottomSheet() : false;
     });
-    isLocalBookMark.value = widget.isBookmark ?? false;
   }
 
   setBottomSheet() async {
@@ -104,19 +113,16 @@ class _ProfileFeedDetailScreenState extends State<ProfileFeedDetailScreen> {
   }
 
   RxBool isViewMore = false.obs;
-  RxBool isLocalBookMark = false.obs;
 
   getData() async {
-    print("Cehck type -111-> ${widget.myReaction}");
+    print("Cehck type --> ${widget.mediaType}, ${widget.mediaURL}");
     homeFeedController.CommentCount.value =
         int.parse(widget.commentCount.toString());
     homeFeedController.ReactionCount.value =
         int.parse(widget.likeCount.toString());
-    widget.myReaction = widget.myReaction;
     homeFeedController.isBookMarkedtemp.value = widget.isBookmark!;
     widget.mediaType == 1
         ? await setFile().whenComplete(() {
-            print("Check dataaaa ==> 11");
             setState(() {});
           })
         : widget.mediaType == 2
@@ -226,51 +232,49 @@ class _ProfileFeedDetailScreenState extends State<ProfileFeedDetailScreen> {
         _isPlaying.value = true;
       });
     } catch (e) {
-      // print("Check data ==> ${e}");
-      // Toaster().warning("Please wait..");
+      Toaster().warning("Please wait..");
+    }
+  }
+
+  onwillPop() {
+    if (widget.mediaType == 0) {
+      widget.fromMain == true
+          ? Get.offAll(() => HomePage(
+                pageIndex: 0,
+              ))
+          : Get.back();
+    }
+    if (widget.mediaType == 1) {
+      _controller.dispose();
+      widget.fromMain == true
+          ? Get.offAll(() => HomePage(
+                pageIndex: 0,
+              ))
+          : Get.back();
+    }
+    if (widget.mediaType == 2) {
+      _audioPlayer.audioCache.loadedFiles.clear();
+      _audioPlayer.dispose();
+      widget.fromMain == true
+          ? Get.offAll(() => HomePage(
+                pageIndex: 0,
+              ))
+          : Get.back();
+    }
+    if (widget.mediaURL == null || widget.mediaURL == "") {
+      widget.fromMain == true
+          ? Get.offAll(() => HomePage(
+                pageIndex: 0,
+              ))
+          : Get.back();
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    print('Check datatatattaa ==> ${widget.userProfile}');
-    return PopScope(
-      canPop: false,
-      onPopInvoked: (v) async {
-        if (v == false) {
-          if (widget.mediaType == 0) {
-            widget.fromMain == true
-                ? Get.offAll(() => HomePage(
-                      pageIndex: 0,
-                    ))
-                : Get.back();
-          }
-          if (widget.mediaType == 1) {
-            _controller.dispose();
-            widget.fromMain == true
-                ? Get.offAll(() => HomePage(
-                      pageIndex: 0,
-                    ))
-                : Get.back();
-          }
-          if (widget.mediaType == 2) {
-            _audioPlayer.audioCache.loadedFiles.clear();
-            _audioPlayer.dispose();
-            widget.fromMain == true
-                ? Get.offAll(() => HomePage(
-                      pageIndex: 0,
-                    ))
-                : Get.back();
-          }
-          if (widget.mediaURL == null || widget.mediaURL == "") {
-            widget.fromMain == true
-                ? Get.offAll(() => HomePage(
-                      pageIndex: 0,
-                    ))
-                : Get.back();
-          }
-        }
-      },
+    print("Checl passing status ==> ${widget.userProfile}");
+    return WillPopScope(
+      onWillPop: () => onwillPop(),
       child: Scaffold(
         backgroundColor: Colors.black,
         body: Stack(
@@ -285,12 +289,42 @@ class _ProfileFeedDetailScreenState extends State<ProfileFeedDetailScreen> {
                     width: Get.width,
                     color: Colors.black,
                     child: isMediaAvilable.value == false
-                        ? Center(
-                            child: MyText(
-                              fontWeight: FontWeight.w400,
-                              text_name: "No Media",
-                              txtfontsize: FontSizes.s18,
-                              txtcolor: MyColors.whiteColor,
+                        ? SingleChildScrollView(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: Insets.i50),
+                              child: Column(
+                                children: [
+                                  SizedBox(
+                                    height: Get.height * 0.2,
+                                  ),
+                                  HashTagText(
+                                    text: widget.caption ?? "",
+                                    basicStyle: TextStyle(
+                                      fontSize: FontSizes.s18,
+                                      color: MyColors.whiteColor,
+                                      fontWeight: FontWeight.w400,
+                                      fontFamily: Fonts.poppins,
+                                    ),
+                                    decoratedStyle: TextStyle(
+                                      fontSize: FontSizes.s18,
+                                      color: MyColors.greenColor,
+                                      fontWeight: FontWeight.w400,
+                                      fontFamily: Fonts.poppins,
+                                    ),
+                                    onTap: (text) {
+                                      homeFeedController.selectedTopic.value =
+                                          text.replaceAll('#', '');
+                                      homeFeedController.getSeedsByTopic(true);
+                                      HomeController homeController =
+                                          Get.put(HomeController());
+                                      homeController.pageIndex.value = 0;
+                                      Get.back();
+                                      Get.back();
+                                    },
+                                  ),
+                                ],
+                              ),
                             ),
                           )
                         : widget.mediaType == 0
@@ -311,186 +345,180 @@ class _ProfileFeedDetailScreenState extends State<ProfileFeedDetailScreen> {
             Positioned(
               top: Insets.i35,
               left: Insets.i20,
-              right: Insets.i10,
+              right: Insets.i20,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      InkWell(
-                        onTap: () async {
-                          if (widget.fromMain == true) {
-                            Get.offAll(
-                              () => HomePage(pageIndex: 0),
-                            );
-                          } else {
-                            if (widget.mediaType == 0) {
-                              widget.fromMain == true
-                                  ? Get.offAll(() => HomePage(
-                                        pageIndex: 0,
-                                      ))
-                                  : Get.back();
-                            }
-                            if (widget.mediaType == 1) {
-                              _controller.dispose();
-                              widget.fromMain == true
-                                  ? Get.offAll(() => HomePage(
-                                        pageIndex: 0,
-                                      ))
-                                  : Get.back();
-                            }
-                            if (widget.mediaType == 2) {
-                              _audioPlayer.audioCache.loadedFiles.clear();
-                              _audioPlayer.dispose();
-                              widget.fromMain == true
-                                  ? Get.offAll(() => HomePage(
-                                        pageIndex: 0,
-                                      ))
-                                  : Get.back();
-                            }
-                            if (widget.mediaURL == null ||
-                                widget.mediaURL == "") {
-                              widget.fromMain == true
-                                  ? Get.offAll(() => HomePage(
-                                        pageIndex: 0,
-                                      ))
-                                  : Get.back();
-                            }
-                          }
-                        },
-                        child: const Icon(
-                          Icons.arrow_back_ios_new_rounded,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(
-                        width: Insets.i10,
-                      ),
-                      GestureDetector(
-                        onTap: () {
-                          storage.read(MyStorage.userName) == widget.userName
-                              ? Get.to(() => UserProfileScreenbackup(
-                                    fromProfile: true,
-                                    userName: storage.read(MyStorage.userName),
+                  Expanded(
+                    flex: 1,
+                    child: InkWell(
+                      onTap: () async {
+                        if (widget.mediaType == 0) {
+                          widget.fromMain == true
+                              ? Get.offAll(() => HomePage(
+                                    pageIndex: 0,
                                   ))
-                              : Get.to(() => UserProfileScreenbackup(
-                                    fromProfile: false,
-                                    userName: widget.userName ?? "",
-                                  ));
-                        },
-                        child: Row(
-                          children: [
-                            UnicornOutlineButton(
-                              strokeWidth: 2,
-                              radius: 100,
-                              gradient: LinearGradient(
-                                colors: [
-                                  MyColors.greenColor,
-                                  MyColors.redColor
-                                ],
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                              ),
-                              child: Container(
-                                height: Insets.i60,
-                                width: Insets.i60,
-                                decoration: BoxDecoration(
-                                  borderRadius:
-                                      BorderRadius.circular(Insets.i12),
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(5),
-                                  child: CustomImageView(
-                                      isProfilePicture: true,
-                                      imagePathOrUrl:
-                                          "$baseUrl${widget.userProfile}",
-                                      radius: 100),
-                                ),
-                              ),
-                              onPressed: () {},
-                            ),
-                            const SizedBox(
-                              width: Insets.i10,
-                            ),
-                            Column(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                MyText(
-                                  text_name: widget.displayname ?? "N/A",
-                                  txtcolor: MyColors.whiteColor,
-                                  fontWeight: FontWeight.w500,
-                                  txtfontsize: FontSizes.s14,
-                                ),
-                                MyText(
-                                  text_name: homeFeedController.timeDiffrance(
-                                      widget.createTime ?? DateTime.now()),
-                                  txtcolor: MyColors.grayColor,
-                                  fontWeight: FontWeight.w400,
-                                  txtfontsize: FontSizes.s12,
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
+                              : Get.back();
+                        }
+                        if (widget.mediaType == 1) {
+                          _controller.dispose();
+                          widget.fromMain == true
+                              ? Get.offAll(() => HomePage(
+                                    pageIndex: 0,
+                                  ))
+                              : Get.back();
+                        }
+                        if (widget.mediaType == 2) {
+                          _audioPlayer.audioCache.loadedFiles.clear();
+                          _audioPlayer.dispose();
+                          widget.fromMain == true
+                              ? Get.offAll(() => HomePage(
+                                    pageIndex: 0,
+                                  ))
+                              : Get.back();
+                        }
+                        if (widget.mediaURL == null || widget.mediaURL == "") {
+                          widget.fromMain == true
+                              ? Get.offAll(() => HomePage(
+                                    pageIndex: 0,
+                                  ))
+                              : Get.back();
+                        }
+                      },
+                      child: const Icon(
+                        Icons.arrow_back_ios_new_rounded,
+                        color: Colors.white,
                       ),
-                    ],
+                    ),
                   ),
-                  Row(
-                    children: [
-                      widget.fromBookmark == true &&
-                              widget.userName !=
-                                  storage.read(MyStorage.userName)
-                          ? popupButtonWidget()
-                          : GestureDetector(
-                              onTap: () async {
-                                await homeFeedController.bookMarkTheFeed(
-                                    widget.feedID,
-                                    fromProfile: true,
-                                    bookmarkValue: widget.isBookmark);
-
-                                widget.fromBookmark == true
-                                    ? widget.bookmarkList
-                                        ?.removeAt(widget.index!)
-                                    : null;
-                              },
-                              child: Obx(
-                                () => Container(
-                                    height: Insets.i35,
-                                    width: Insets.i35,
-                                    padding: const EdgeInsets.all(Insets.i8),
-                                    decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color:
-                                            MyColors.grayColor.withOpacity(.3)),
-                                    child: homeFeedController
-                                                .isBookMarkedtemp.value ==
-                                            true
-                                        ? SvgPicture.asset(
-                                            "assets/images/unbookMark.svg")
-                                        : SvgPicture.asset(
-                                            "assets/images/bookMark.svg")),
+                  const SizedBox(
+                    width: Insets.i10,
+                  ),
+                  Expanded(
+                      flex: 3,
+                      child: GestureDetector(
+                          onTap: () {
+                            storage.read(MyStorage.userName) == widget.userName
+                                ? Get.to(() => UserProfileScreenbackup(
+                                      fromProfile: true,
+                                      userName:
+                                          storage.read(MyStorage.userName),
+                                    ))
+                                : Get.to(() => UserProfileScreenbackup(
+                                      fromProfile: false,
+                                      userName: widget.userName ?? "",
+                                    ));
+                          },
+                          child: UnicornOutlineButton(
+                            strokeWidth: 2,
+                            radius: 100,
+                            gradient: LinearGradient(
+                              colors: [MyColors.greenColor, MyColors.redColor],
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                            ),
+                            child: Container(
+                              height: Insets.i60,
+                              width: Insets.i60,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(Insets.i12),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(5),
+                                child: CustomImageView(
+                                    isProfilePicture: true,
+                                    imagePathOrUrl: widget.userProfile ==
+                                                null ||
+                                            widget.userProfile == ""
+                                        ? ""
+                                        : "$baseForImage${widget.userProfile}",
+                                    radius: 100),
                               ),
                             ),
-                      SizedBox(
-                        width: Insets.i5,
+                            onPressed: () {},
+                          ))),
+                  const SizedBox(
+                    width: Insets.i5,
+                  ),
+                  Expanded(
+                    flex: widget.userName != storage.read(MyStorage.userName)
+                        ? 9
+                        : 7,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        MyText(
+                          textOverflow: TextOverflow.ellipsis,
+                          text_name: "${widget.displayname}" ?? "N/A",
+                          txtcolor: MyColors.whiteColor,
+                          fontWeight: FontWeight.w500,
+                          txtfontsize: FontSizes.s14,
+                        ),
+                        MyText(
+                          text_name: homeFeedController.timeDiffrance(
+                              widget.createTime ?? DateTime.now()),
+                          txtcolor: MyColors.grayColor,
+                          fontWeight: FontWeight.w400,
+                          txtfontsize: FontSizes.s12,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(
+                    width: Insets.i10,
+                  ),
+                  Expanded(
+                    flex: 2,
+                    child: GestureDetector(
+                      onTap: () async {
+                        await homeFeedController.bookMarkTheFeed(widget.feedID,
+                            fromProfile: true,
+                            bookmarkValue: widget.isBookmark);
+
+                        widget.fromBookmark == true
+                            ? widget.bookmarkList?.removeAt(widget.index!)
+                            : null;
+                      },
+                      child: Obx(
+                        () => Container(
+                            height: Insets.i50,
+                            width: Insets.i50,
+                            padding: const EdgeInsets.all(Insets.i12),
+                            decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: MyColors.grayColor.withOpacity(.3)),
+                            child: homeFeedController.isBookMarkedtemp.value ==
+                                    true
+                                ? SvgPicture.asset(MyImageURL.unbookmarkImage)
+                                : SvgPicture.asset(MyImageURL.bookmarkImage)),
                       ),
-                      widget.userName != storage.read(MyStorage.userName)
-                          ? SizedBox()
-                          : PopupMenuButton<String>(
+                    ),
+                  ),
+                  const SizedBox(
+                    width: Insets.i10,
+                  ),
+                  widget.userName != storage.read(MyStorage.userName)
+                      ? const SizedBox()
+                      : Expanded(
+                          flex: 2,
+                          child: PopupMenuButton<String>(
                               padding: EdgeInsets.zero,
                               icon: Padding(
                                 padding: const EdgeInsets.all(0),
                                 child: Container(
-                                  height: Insets.i35,
-                                  width: Insets.i35,
+                                  height: Insets.i50,
+                                  width: Insets.i50,
+                                  // padding: const EdgeInsets.all(Insets.i12),
                                   decoration: BoxDecoration(
                                       shape: BoxShape.circle,
                                       color:
                                           MyColors.grayColor.withOpacity(.3)),
-                                  child: Icon(
-                                    Icons.more_vert,
-                                    color: MyColors.whiteColor,
+                                  child: Center(
+                                    child: Icon(
+                                      Icons.more_horiz,
+                                      color: MyColors.whiteColor,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -505,30 +533,38 @@ class _ProfileFeedDetailScreenState extends State<ProfileFeedDetailScreen> {
                                               .deleteFeedAPI(widget.feedID);
                                         },
                                       )
-                                    : homeFeedController.bookMarkTheFeed(
-                                        widget.feedID,
-                                        bookmarkValue: widget.isBookmark,
-                                        ind: widget.index);
+                                    : result == "Edit"
+                                        ? Get.to(() => EditPostScreen(
+                                              postType: widget.mediaType,
+                                              feedId: widget.feedID,
+                                              mediaURL: widget.mediaURL,
+                                              caption: widget.caption,
+                                              thumbnailURL: widget.thumbnail,
+                                              isPrivate: widget.isPrivate,
+                                            ))
+                                        : homeFeedController.bookMarkTheFeed(
+                                            widget.feedID,
+                                            bookmarkValue: widget.isBookmark,
+                                            ind: widget.index);
                               },
                               itemBuilder: (BuildContext context) =>
                                   <PopupMenuEntry<String>>[
-                                    // const PopupMenuItem<String>(
-                                    //   value: 'Edit',
-                                    //   child: ListTile(
-                                    //     leading: Icon(Icons.edit_outlined),
-                                    //     title: Text('Edit'),
-                                    //   ),
-                                    // ),
+                                    const PopupMenuItem<String>(
+                                      value: 'Edit',
+                                      child: ListTile(
+                                        leading: Icon(Icons.edit_outlined),
+                                        title: Text('Edit'),
+                                      ),
+                                    ),
                                     const PopupMenuItem<String>(
                                       value: 'Delete',
                                       child: ListTile(
                                         leading: Icon(Icons.delete_outlined),
-                                        title: const Text('Delete'),
+                                        title: Text('Delete'),
                                       ),
                                     ),
                                   ]),
-                    ],
-                  )
+                        )
                 ],
               ),
             ),
@@ -546,12 +582,10 @@ class _ProfileFeedDetailScreenState extends State<ProfileFeedDetailScreen> {
                               context,
                               widget.feedID,
                               widget.shareURL,
-                              widget.caption,
-                              widget.thumbnail);
-
-                          // String textToShare = widget.shareURL!;
-
-                          // Share.share(textToShare);
+                              widget.caption ?? "",
+                              widget.mediaType != 0
+                                  ? "$baseForImage${homeFeedController.homeFeedList[widget.index!].thumbnailURL}"
+                                  : "$baseForImage${widget.mediaURL}");
                         },
                         child: Column(
                           children: [
@@ -613,18 +647,9 @@ class _ProfileFeedDetailScreenState extends State<ProfileFeedDetailScreen> {
                                   ind: widget.index)
                               .whenComplete(() {
                             setState(() {
-                              if (widget.myReaction == null ||
-                                  widget.myReaction == "") {
-                                widget.myReaction = "love";
-
-                                homeFeedController.ReactionCount.value =
-                                    homeFeedController.ReactionCount.value + 1;
-                              } else {
-                                widget.myReaction = null;
-
-                                homeFeedController.ReactionCount.value =
-                                    homeFeedController.ReactionCount.value - 1;
-                              }
+                              widget.myReaction == null
+                                  ? widget.myReaction = "love"
+                                  : widget.myReaction = null;
                             });
                           });
                         },
@@ -632,11 +657,13 @@ class _ProfileFeedDetailScreenState extends State<ProfileFeedDetailScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             SvgPicture.asset(
-                              MyImageURL.likecomment,
+                              widget.myReaction != null
+                                  ? MyImageURL.LikedImage
+                                  : MyImageURL.like,
                               height: Insets.i25,
                               width: Insets.i25,
                               color: widget.myReaction != null
-                                  ? Colors.red
+                                  ? null
                                   : Colors.white,
                             ),
                             const SizedBox(
@@ -660,112 +687,80 @@ class _ProfileFeedDetailScreenState extends State<ProfileFeedDetailScreen> {
                 )),
 
             //! CAPTION VIEW
-            Positioned(
-              left: Insets.i20,
-              bottom: widget.mediaType == 0 ? Insets.i50 : Insets.i150,
-              right: Insets.i60,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  Obx(
-                    () => MyText(
-                      txtAlign: TextAlign.left,
-                      text_name: viewText(
-                          widget.caption.toString(), !isViewMore.value),
-                      txtcolor: MyColors.whiteColor,
-                      fontWeight: FontWeight.w500,
-                      txtfontsize: FontSizes.s14,
+            if (isMediaAvilable.value)
+              Positioned(
+                left: Insets.i20,
+                bottom: widget.mediaType == 0 ? Insets.i50 : Insets.i150,
+                right: Insets.i60,
+                child: SizedBox(
+                  height: Get.height * 0.3,
+                  child: Align(
+                    alignment: Alignment.bottomLeft,
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Obx(
+                            // () => MyText(
+                            //   txtAlign: TextAlign.left,
+                            //   text_name: viewText(
+                            //       widget.caption.toString(), !isViewMore.value),
+                            //   txtcolor: MyColors.whiteColor,
+                            //   fontWeight: FontWeight.w500,
+                            //   txtfontsize: FontSizes.s14,
+                            // ),
+                            () => HashTagText(
+                              text: viewText(
+                                  widget.caption.toString(), !isViewMore.value),
+                              basicStyle: TextStyle(
+                                fontWeight: FontWeight.w400,
+                                fontSize: FontSizes.s14,
+                                color: MyColors.whiteColor,
+                              ),
+                              decoratedStyle: TextStyle(
+                                fontWeight: FontWeight.w400,
+                                fontSize: FontSizes.s14,
+                                color: MyColors.greenColor,
+                              ),
+                              onTap: (text) {
+                                homeFeedController.selectedTopic.value =
+                                    text.replaceAll('#', '');
+                                homeFeedController.getSeedsByTopic(true);
+                                HomeController homeController =
+                                    Get.put(HomeController());
+                                homeController.pageIndex.value = 0;
+                                Get.back();
+                                Get.back();
+                              },
+                            ),
+                          ),
+                          widget.caption!.length > 50
+                              ? Obx(() => InkWell(
+                                    onTap: () {
+                                      isViewMore.value = !isViewMore.value;
+                                    },
+                                    child: MyText(
+                                      text_name: !isViewMore.value
+                                          ? "View more"
+                                          : "View less",
+                                      fontWeight: FontWeight.bold,
+                                      txtfontsize: FontSizes.s14,
+                                      txtcolor: MyColors.whiteColor,
+                                      txtAlign: TextAlign.left,
+                                    ),
+                                  ))
+                              : Container(),
+                        ],
+                      ),
                     ),
                   ),
-                  widget.caption!.length > 50
-                      ? Obx(() => InkWell(
-                            onTap: () {
-                              isViewMore.value = !isViewMore.value;
-                            },
-                            child: MyText(
-                              text_name:
-                                  !isViewMore.value ? "View more" : "View less",
-                              fontWeight: FontWeight.bold,
-                              txtfontsize: FontSizes.s14,
-                              txtcolor: MyColors.whiteColor,
-                              txtAlign: TextAlign.left,
-                            ),
-                          ))
-                      : Container(),
-                ],
+                ),
               ),
-            ),
           ],
         ),
       ),
     );
-  }
-
-  Widget popupButtonWidget() {
-    return PopupMenuButton<String>(
-        padding: const EdgeInsets.only(left: Insets.i35),
-        icon: Padding(
-          padding: const EdgeInsets.all(0),
-          child: Container(
-            height: Insets.i35,
-            width: Insets.i35,
-            // padding: const EdgeInsets.all(Insets.i12),
-            decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: MyColors.grayColor.withOpacity(.3)),
-            child: Icon(
-              Icons.more_vert,
-              color: MyColors.whiteColor,
-            ),
-          ),
-        ),
-        onSelected: (String result) {
-          result == "report"
-              ? commonDialog(
-                  context,
-                  "Report",
-                  "Are you sure You want to report this Post?",
-                  onTap: () async {
-                    Get.back();
-                    await homeFeedController
-                        .reportTheSeed(widget.feedID.toString());
-                  },
-                )
-              : homeFeedController
-                  .bookMarkTheFeed(widget.feedID,
-                      ind: widget.index,
-                      bookmarkValue: homeFeedController
-                          .homeFeedList[widget.index!].bookmark)
-                  .whenComplete(() {
-                  widget.fromBookmark == true
-                      ? widget.bookmarkList?.removeAt(widget.index!)
-                      : null;
-                });
-          isLocalBookMark.value = isLocalBookMark.value == true ? false : true;
-        },
-        itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-              const PopupMenuItem<String>(
-                value: 'report',
-                child: ListTile(
-                  leading: Icon(Icons.report),
-                  title: Text('Report'),
-                ),
-              ),
-              PopupMenuItem<String>(
-                value: 'bookmark',
-                child: Obx(
-                  () => ListTile(
-                    leading: Icon(isLocalBookMark.value == true
-                        ? Icons.bookmark_add_rounded
-                        : Icons.bookmark_add_outlined),
-                    title: Text(isLocalBookMark.value == true
-                        ? 'Bookmarked'
-                        : 'Bookmark'),
-                  ),
-                ),
-              ),
-            ]);
   }
 
   Widget videoView() {
@@ -781,14 +776,14 @@ class _ProfileFeedDetailScreenState extends State<ProfileFeedDetailScreen> {
 
   Widget ImageView() {
     return CustomImageView(
-      isProfilePicture: false,
-      imagePathOrUrl: "$baseUrl${widget.mediaURL}",
+      isProfilePicture: true,
+      imagePathOrUrl: "$baseForImage${widget.mediaURL}",
       fit: BoxFit.fitWidth,
     );
   }
 
   Widget audioView() {
-    return _isShowSlider.value != true
+    return _isPlaying.value != true
         ? mediaLoader()
         : widget.thumbnail == null || widget.thumbnail == ""
             ? Image.asset(
@@ -894,8 +889,6 @@ class _ProfileFeedDetailScreenState extends State<ProfileFeedDetailScreen> {
                       value: _controller.value.position.inMilliseconds /
                           _controller.value.duration.inMilliseconds,
                       onChanged: (value) {
-                        print(
-                            "Check ==> ${_controller.value.duration.inSeconds}");
                         _onSeek(value);
                       },
                     )

@@ -188,7 +188,7 @@ class _SearchHomeScreenState extends State<SearchHomeScreen> {
                                         isProfilePicture: false,
                                         radius: 100,
                                         imagePathOrUrl:
-                                            "$baseUrl${homeFeedController.searchUserDataList[index].userprofile?.profilePicture}"),
+                                            "$baseForImage${homeFeedController.searchUserDataList[index].userprofile?.profilePicture}"),
                                   )),
                                 ),
                                 const SizedBox(width: Insets.i10),
