@@ -1,0 +1,76 @@
+// common Images file
+
+class MyImageURL {
+  static const root = "assets/images/";
+
+  static const google = "${root}google.png";
+  static const defaulfProfile = "${root}default_user.png";
+  static const accountImage = "${root}accountImage.svg";
+  static const chatImage = "${root}chatImage.png";
+  static const dotImage = "${root}dotImage.svg";
+  static const dummyfeedImage = "${root}myAppLogo.png";
+  static const FrameImage = "${root}Frame.svg";
+  static const messageImage = "${root}messageImage.svg";
+  static const playImage = "${root}playImage.png";
+  static const readseedImage = "${root}podcastIcon.svg";
+  static const videoplay = "${root}watchIcon.svg";
+  static const watermelImage = "${root}watermel.svg";
+  static const dummypodcast = "${root}dummypodcast.png";
+  static const playvideo = "${root}playvideo.svg";
+  static const editProfile = "${root}edit.svg";
+  static const share = "${root}share.svg";
+  static const followImage = "${root}folloImage.svg";
+  static const vedioplay = "${root}vedioplay.svg";
+  static const Notifications = "${root}Notifications.svg";
+  static const privacy = "${root}privacy.svg";
+  static const help = "${root}help.svg";
+  static const about = "${root}about.svg";
+  static const homeMenu = "${root}menu.png";
+  static const message = "${root}message.svg";
+  static const notification = "${root}notification_bell.svg";
+  static const podcast = "${root}Podcast.svg";
+  static const readText = "${root}text.svg";
+  static const searchGlass = "${root}search_glass.svg";
+  static const watch = "${root}video.svg";
+  static const like = "${root}like.svg";
+  static const cmt = "${root}Comment.svg";
+  static const upload = "${root}upload.svg";
+  static const camera = "${root}camera.svg";
+  static const galary = "${root}galary.svg";
+  static const homeNew = "${root}home.svg";
+  static const reel = "${root}reel.svg";
+  static const menuNew = "${root}menu.svg";
+  static const sharePost = "${root}sharePost.svg";
+  static const appMainIcon = "${root}appMainIcon.svg";
+  static const offtoggle = "${root}offtoggle.svg";
+  static const ontoggle = "${root}ontoggle.svg";
+  static const playIcon = "${root}playIcon.svg";
+  static const dataNotFoundImage = "${root}dummypodcast.png";
+  static const audioImage = "${root}audioImage.jpeg";
+  static const LikedImage = "${root}WatermelonLiked.svg";
+  static const imageIcon = "${root}audio.svg";
+  static const userAcconutIcon = "${root}user.png";
+  static const detailcomment = "${root}detailcomment.svg";
+  static const likecomment = "${root}likecomment.svg";
+  static const detailshare = "${root}detailshare.svg";
+  static const editIcon = "${root}editIcon.svg";
+  static const deleteIcon = "${root}delete.svg";
+  static const deletedraft = "${root}deletedraft.svg";
+  static const myDraft = "${root}my-draft.svg";
+  static const logout = "${root}Logout.svg";
+  static const more = "${root}more.svg";
+  static const deleteAccount = "${root}deleteSetting.svg";
+  static const bookmark = "${root}bookMark.svg";
+  static const appleLogo = "${root}apple.svg";
+  static const repostIcon = "${root}repostIcon.svg";
+
+  static const shareFeed = "${root}shareFeed.svg";
+  static const shareMessage = "${root}shareMessage.svg";
+  static const shareStory = "${root}shareStory.svg";
+  static const shareSMS = "${root}shareSMS.svg";
+  static const shareWtsp = "${root}shareWhatsp.svg";
+  static const shareCopyLink = "${root}shareLink.svg";
+  static const dummyProfileImage = "${root}dummy_profile.jpg";
+  static const unbookmarkImage = "${root}unbookMark.svg";
+  static const bookmarkImage = "${root}bookMark.svg";
+}

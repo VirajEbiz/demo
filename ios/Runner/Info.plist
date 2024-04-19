@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDisplayName</key>
+	<string>Watermel</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>watermel</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(FLUTTER_BUILD_NAME)</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.960372074022-a9jvvq7cl3ecqer2qlu0lj705abn2c9g</string>
+			</array>
+		</dict>
+	</array>
+	<key>CFBundleVersion</key>
+	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>FirebaseAppDelegateProxyEnabled</key>
+	<false/>
+	<key>GIDClientID</key>
+	<string>960372074022-lbb22m6u63umk01j0vntdg9u1him2djp.apps.googleusercontent.com</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
+	<key>NSAppleMusicUsageDescription</key>
+	<string>We need your permission to access Apple Music</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>We need your permission to access your calendar</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Camera Usage</string>
+	<key>NSContactsUsageDescription</key>
+	<string>We need your permission to access your contacts</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>We need your permission to access your health data</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>We need your permission to modify your health data</string>
+	<key>NSHomeKitUsageDescription</key>
+	<string>We need your permission to access your home data</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>We need your permission to always use your location</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>We need your permission to use your location</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Mic Usage</string>
+	<key>NSMotionUsageDescription</key>
+	<string>We need your permission to access your motion and fitness data</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>We need your permission to save a photo to your photo library</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Explain why your app uses photo library</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>We need your permission to process speech</string>
+	<key>NSVideoSubscriberAccountUsageDescription</key>
+	<string>We need your permission to access your media and Apple Music subscription information</string>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>remote-notification</string>
+	</array>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
+	<key>UIMainStoryboardFile</key>
+	<string>Main</string>
+	<key>UIStatusBarHidden</key>
+	<false/>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+	<string>instagram-stories</string>
+	<string>facebook-stories</string>
+	<string>facebook</string>
+	<string>instagram</string>
+	<string>twitter</string>
+	<string>whatsapp</string>
+    <string>tg</string>
+	</array>
+</dict>
+</plist>
