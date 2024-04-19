@@ -1,9 +1,13 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:io';
 import 'package:dio/dio.dart' as dio;
 import 'package:dio/dio.dart' as fm;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get/get_rx/get_rx.dart';
+import 'package:path/path.dart' as path;
+
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:watermel/app/Views/home_bottom_bar/home_page.dart';
 import 'package:watermel/app/Views/user_profile/profile_detail_screen.dart';
@@ -14,6 +18,7 @@ import 'package:watermel/app/models/detail_post_data_model.dart';
 import 'package:watermel/app/models/getCommentList_model.dart';
 import 'package:watermel/app/models/getPeopleKnowData_model.dart';
 import 'package:watermel/app/models/getallfeedmodel.dart';
+import 'package:watermel/app/models/hashtag_model.dart';
 import 'package:watermel/app/models/hetsearchedusedata_model.dart';
 import 'package:watermel/app/utils/loader.dart';
 import 'package:watermel/app/utils/preference.dart';
@@ -105,10 +110,14 @@ class HomeFeedController extends GetxController {
   // RxList videoThumnailList = [].obs;
   RxBool isLoadingFeed = false.obs;
   RxString noMoreFeeds = "".obs;
+  RxString selectedTopic = "".obs;
+  final RxInt selectedTopicIndex = 0.obs;
+  RxList<HashtagModel> trendingHashtagsList = <HashtagModel>[].obs;
+  RxList<HashtagModel> suggestedHashtagsList = <HashtagModel>[].obs;
 
 //! GET ALL FEED API
 
-  Future getAllFeedData(fromfirst, fromPagination, {fromIn}) async {
+  Future getAllFeedData(fromfirst, fromPagination) async {
     /** Mark posts as viewed */
     SharedPreferences prefs = await SharedPreferences.getInstance();
     List<String> viewedPosts = prefs.getStringList('viewedPosts') ?? [];
@@ -116,24 +125,23 @@ class HomeFeedController extends GetxController {
       var formData = {
         'seed_ids': viewedPosts,
       };
+      print('form data ==> $formData');
       String myUrl = "$baseUrl$markAsSeen";
 
       {
         try {
-          showLoader();
+          // showLoader();
           var response = await ApiManager().call(myUrl, formData, ApiType.post);
           if (response.status == "success") {
-            hideLoader();
+            print("Mark as seen ==> ${response.message}");
+            // hideLoader();
             viewedPosts.clear();
             prefs.setStringList('viewedPosts', viewedPosts);
-          } else if (response.code == "000") {
-            await getAllFeedData(fromfirst, fromPagination);
-          } else if (response.code == 401) {
           } else {
             Toaster().warning(response.message);
           }
         } catch (e, f) {
-          hideLoader();
+          // hideLoader();
           log("Chek data ==> $e, $f ");
           MyPrint(tag: "catch", value: e.toString());
         }
@@ -167,11 +175,8 @@ class HomeFeedController extends GetxController {
           totalPage.value = response.data["total_pages"];
           if (response.data["seeds"] != null) {
             for (var i = 0; i < response.data["seeds"].length; i++) {
-              if (!homeFeedList.any(
-                  (element) => element.id == response.data["seeds"][i]["id"])) {
-                homeFeedList
-                    .add(FeedListData.fromJson(response.data["seeds"][i]));
-              }
+              homeFeedList
+                  .add(FeedListData.fromJson(response.data["seeds"][i]));
               homeFeedList[i].isMore!.value =
                   homeFeedList[i].caption!.length > 50 ? true : false;
               listOfSeenFeed.add(homeFeedList[i].id!);
@@ -184,8 +189,6 @@ class HomeFeedController extends GetxController {
             isLoadingFeed.value = false;
             Toaster().warning(response.message);
           }
-        } else if (response.code == "000") {
-          await getAllFeedData(fromfirst, fromPagination, fromIn: true);
         } else {
           isLoadingFeed.value = false;
           Toaster().warning(response.message);
@@ -219,8 +222,6 @@ class HomeFeedController extends GetxController {
           Get.offAll(() => HomePage(
                 pageIndex: 0,
               ));
-        } else if (response.code == "000") {
-          await repostTheFeedAPI(feedID, caption);
         } else {
           Toaster().warning(response.message);
         }
@@ -264,8 +265,6 @@ class HomeFeedController extends GetxController {
           } else {
             Toaster().warning(response.message);
           }
-        } else if (response.code == "000") {
-          await searchUsersName(searchValue, fromSearch, fromPegination);
         } else {
           Toaster().warning(response.message);
         }
@@ -302,12 +301,10 @@ class HomeFeedController extends GetxController {
             }
             update();
           } else {
-            // await ApiManager().setRefreshTokenAPI(fromMain: true);
+            await ApiManager().setRefreshTokenAPI(fromMain: true);
 
             Toaster().warning(response.message);
           }
-        } else if (response.code == "000") {
-          await peopleYouKnow(fromNew);
         } else {
           Toaster().warning(response.message);
         }
@@ -356,9 +353,6 @@ class HomeFeedController extends GetxController {
             homeFeedList.refresh();
             Toaster().warning(response.message);
           }
-        } else if (response.code == "000") {
-          await bookMarkTheFeed(feedID,
-              bookmarkValue: bookmarkValue, fromProfile: fromProfile, ind: ind);
         } else {
           Toaster().warning(response.message);
         }
@@ -502,11 +496,6 @@ class HomeFeedController extends GetxController {
           setCommnetOnFirst(response.data["id"]);
           hideLoader();
           commentController.clear();
-        } else if (response.code == "000") {
-          await addComment(feedID,
-              fromAddComment: fromAddComment,
-              fromprofile: fromprofile,
-              ind: ind);
         } else {
           Toaster().warning(response.message);
         }
@@ -546,8 +535,6 @@ class HomeFeedController extends GetxController {
           }
           getCommentListDataModel.refresh();
           hideLoader();
-        } else if (response.code == "000") {
-          await getComment(feedID);
         } else {
           Toaster().warning(response.message);
         }
@@ -575,8 +562,6 @@ class HomeFeedController extends GetxController {
         var response = await ApiManager().call(myUrl, formData, ApiType.post);
         if (response.status == "success") {
           Toaster().warning(response.message);
-        } else if (response.code == "000") {
-          await reportTheSeed(feedID);
         } else {
           Toaster().warning(response.message);
         }
@@ -622,8 +607,6 @@ class HomeFeedController extends GetxController {
               homeFeedList.refresh();
             }
           }
-        } else if (response.code == "000") {
-          await reactionAPI(feedID, fromProfile, autoReflect, ind: ind);
         } else {
           Toaster().warning(response.message);
         }
@@ -668,8 +651,6 @@ class HomeFeedController extends GetxController {
             profilePostDetails.refresh();
           }
           getCommentListDataModel.refresh();
-        } else if (response.code == "000") {
-          await commentReactionAPI(feedID, ind);
         } else {
           Toaster().warning(response.message);
         }
@@ -698,8 +679,6 @@ class HomeFeedController extends GetxController {
           peopleYouKnowDataList.removeAt(index);
           update();
           Toaster().warning(response.message);
-        } else if (response.code == "000") {
-          await FollowTheUsesr(userName, index: index);
         } else {
           Toaster().warning(response.message);
         }
@@ -712,6 +691,8 @@ class HomeFeedController extends GetxController {
   }
 
 //! COMMNET POST DETAIL API
+//https://watermel-dev-media.eu-central-1.amazonaws.com/media/seeds/6/6_20240415175624_pexels-luis-felipe-queiroz-11867612.jpg
+//https://watermel-dev-media.s3.amazonaws.com/media/users/profile_pictures/1000_F_206941644_RJ4YD9eKbeCSZ4sZdqXjKi7kL0AZYNNq.jpg
 
   Rx<ProfilePostDetailData> profilePostDetails = ProfilePostDetailData().obs;
   RxBool isLoading = true.obs;
@@ -739,7 +720,7 @@ class HomeFeedController extends GetxController {
                   displayname:
                       profilePostDetails.value.user?.userprofile?.displayName ??
                           "",
-                  feedID: profilePostDetails.value.id,
+                  feedID: profilePostDetails.value.id!,
                   isBookmark: profilePostDetails.value.bookmark,
                   likeCount: profilePostDetails.value.reactionsCount,
                   mediaType: 0,
@@ -756,6 +737,7 @@ class HomeFeedController extends GetxController {
                   userName: profilePostDetails.value.user?.username ?? "",
                   userProfile: profilePostDetails
                       .value.user?.userprofile!.profilePicture,
+                  isPrivate: profilePostDetails.value.isPrivate ?? false,
                 ));
           }
           if (fromWhere == 2) {
@@ -769,7 +751,7 @@ class HomeFeedController extends GetxController {
                   displayname:
                       profilePostDetails.value.user?.userprofile?.displayName ??
                           "",
-                  feedID: profilePostDetails.value.id,
+                  feedID: profilePostDetails.value.id!,
                   isBookmark: profilePostDetails.value.bookmark,
                   likeCount: profilePostDetails.value.reactionsCount,
                   mediaType: 1,
@@ -778,14 +760,15 @@ class HomeFeedController extends GetxController {
                               null ||
                           profilePostDetails.value.mediaData?.first.video == ""
                       ? ""
-                      : "$baseUrl${profilePostDetails.value.mediaData!.first.video}",
+                      : "$baseForImage${profilePostDetails.value.mediaData!.first.video}",
                   thumbnail: profilePostDetails.value.thumbURl == null ||
                           profilePostDetails.value.thumbURl == ""
                       ? ""
-                      : "$baseUrl${profilePostDetails.value.thumbURl}",
+                      : "$baseForImage${profilePostDetails.value.thumbURl}",
                   userName: profilePostDetails.value.user?.username ?? "",
                   userProfile: profilePostDetails
                       .value.user?.userprofile!.profilePicture,
+                  isPrivate: profilePostDetails.value.isPrivate ?? false,
                 ));
           }
           if (fromWhere == 3) {
@@ -799,7 +782,7 @@ class HomeFeedController extends GetxController {
                   displayname:
                       profilePostDetails.value.user?.userprofile?.displayName ??
                           "",
-                  feedID: profilePostDetails.value.id,
+                  feedID: profilePostDetails.value.id!,
                   isBookmark: profilePostDetails.value.bookmark,
                   likeCount: profilePostDetails.value.reactionsCount,
                   mediaType: 2,
@@ -808,19 +791,18 @@ class HomeFeedController extends GetxController {
                               null ||
                           profilePostDetails.value.mediaData?.first.audio == ""
                       ? ""
-                      : "$baseUrl${profilePostDetails.value.mediaData!.first.audio}",
+                      : "$baseForImage${profilePostDetails.value.mediaData!.first.audio}",
                   thumbnail: profilePostDetails.value.thumbURl == null ||
                           profilePostDetails.value.thumbURl == ""
                       ? ""
-                      : "$baseUrl${profilePostDetails.value.thumbURl}",
+                      : "$baseForImage${profilePostDetails.value.thumbURl}",
                   userName: profilePostDetails.value.user?.username ?? "",
                   userProfile: profilePostDetails
                       .value.user?.userprofile!.profilePicture,
+                  isPrivate: profilePostDetails.value.isPrivate ?? false,
                 ));
           }
           isLoading.value = false;
-        } else if (response.code == "000") {
-          await getUserPotDetailsAPI(feedId, fromWhere);
         } else {
           Toaster().warning(response.message);
         }
@@ -846,8 +828,6 @@ class HomeFeedController extends GetxController {
         if (response.status == "success") {
           notificationCount.value = response.notificationCount ?? 0;
           update();
-        } else if (response.code == "000") {
-          await getNotificationCountAPI(fromWhere);
         } else if (response.status == "unauthorized") {
           // ApiManager().setRefreshTokenAPI(fromMain: true);
         } else {
@@ -875,8 +855,6 @@ class HomeFeedController extends GetxController {
           Get.offAll(() => HomePage(
                 pageIndex: 3,
               ));
-        } else if (response.code == "000") {
-          await deleteFeedAPI(feedID);
         } else {
           Toaster().warning(response.message);
         }
@@ -885,6 +863,35 @@ class HomeFeedController extends GetxController {
         log("Chek data ==> ${e}, $f ");
         MyPrint(tag: "catch", value: e.toString());
       }
+    }
+  }
+
+  //! EDIT FEED API CALL
+  Future<void> editPost(
+      int feedID, String? caption, String type, bool isPrivate) async {
+    showLoader();
+    try {
+      dio.FormData formData = dio.FormData.fromMap({
+        'caption': caption,
+        'is_private': isPrivate,
+        'type': type,
+      });
+      print("Caption: $caption\nType: $type\nIsPrivate: $isPrivate");
+      String myUrl = "$baseUrl$editFeed$feedID/";
+      ApiManager().call(myUrl, formData, ApiType.put).then((response) {
+        hideLoader();
+        if (response.status == "success") {
+          Toaster().warning(response.message);
+          Get.offAll(() => HomePage(
+                pageIndex: 3,
+              ));
+        } else {
+          Toaster().warning(response.message);
+        }
+      });
+    } catch (e) {
+      hideLoader();
+      MyPrint(tag: "catch", value: e.toString());
     }
   }
 
@@ -906,8 +913,6 @@ class HomeFeedController extends GetxController {
         if (response.status == "success") {
           listOfSeenFeed = [];
           log("Chek data  555==> ${listOfSeenFeed}");
-        } else if (response.code == "000") {
-          await markSeedAsRead();
         } else {
           Toaster().warning(response.message);
         }
@@ -919,6 +924,7 @@ class HomeFeedController extends GetxController {
     }
   }
 
+  /// Mark post as viewed
   void viewedPost(int id) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     final viewedPosts = prefs.getStringList('viewedPosts') ?? [];
@@ -928,5 +934,99 @@ class HomeFeedController extends GetxController {
       prefs.setStringList('viewedPosts', viewedPosts);
       return;
     }
+  }
+
+  /// Get Seeds relative to a Topic
+  Future<void> getSeedsByTopic(bool newTopic,
+      {bool isInChipList = false}) async {
+    if (newTopic) {
+      page = 1;
+    }
+
+    if (!isInChipList) {
+      selectedTopicIndex.value = 1;
+    }
+
+    var formData = "";
+    String type = selectedIndex == 0
+        ? "read"
+        : selectedIndex == 1
+            ? "watch"
+            : "podcast";
+    var myUrl =
+        "$baseUrl$relativeSeeds$page&type=$type&hashtag=${selectedTopic.value.toString().replaceAll('#', '')}";
+    try {
+      final response = await ApiManager().call(
+        myUrl,
+        formData,
+        ApiType.get,
+      );
+
+      if (response.status == 'success') {
+        homeFeedList.clear();
+        for (var i = 0; i < response.data['seeds'].length; i++) {
+          totalPage.value = response.data['total_pages'];
+          currentPage.value = response.data['current_page'];
+          if (totalPage.value == currentPage.value) {
+            noMoreFeeds.value = "No more posts!";
+          }
+          homeFeedList.add(FeedListData.fromJson(response.data['seeds'][i]));
+          homeFeedList[i].isMore!.value =
+              homeFeedList[i].caption!.length > 50 ? true : false;
+        }
+        update();
+      } else {
+        Toaster().warning(response.message);
+      }
+    } catch (e, f) {
+      log('Error: $e, $f');
+    }
+  }
+
+  // Get trending hashtags
+  Future<void> getTrendingHashtags() async {
+    trendingHashtagsList.clear();
+    const myUrl = '$baseUrl$trendingHashtags';
+    try {
+      final response = await ApiManager().call(
+        myUrl,
+        "",
+        ApiType.get,
+      );
+
+      if (response.status == 'success') {
+        for (var i = 0; i < response.data.length; i++) {
+          trendingHashtagsList.add(HashtagModel.fromJson(response.data[i]));
+        }
+        update();
+      } else {
+        Toaster().warning(response.message);
+      }
+    } catch (e, f) {
+      log('Error: $e, $f');
+    }
+  }
+
+  // Get suggested Hashtags
+  Future<void> getSuggestedHashtags(String hashtag) async {
+    suggestedHashtagsList.clear();
+
+    String myUrl = '$baseUrl$suggestedHashtags${hashtag.replaceAll('#', '')}';
+
+    try {
+      ApiManager().call(myUrl, "", ApiType.get).then((response) {
+        if (response.status == 'success') {
+          for (var i = 0; i < response.data.length; i++) {
+            suggestedHashtagsList.add(HashtagModel.fromJson(response.data[i]));
+          }
+          update();
+        } else {
+          Toaster().warning(response.message);
+        }
+      });
+    } catch (e, f) {
+      log('Error: $e, $f');
+    }
+    print('Suggested Hashtags: $suggestedHashtagsList');
   }
 }

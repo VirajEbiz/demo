@@ -99,7 +99,7 @@ class _PodcastViewWidgetState extends State<PodcastViewWidget> {
                                                     .thumnailURL ==
                                                 null
                                             ? ""
-                                            : "$baseUrl${userProfileController.podcastFeedData[index].thumnailURL}"),
+                                            : "$baseForImage${userProfileController.podcastFeedData[index].thumnailURL}"),
                                   )
                                 : userProfileController.podcastFeedData[index]
                                             .thumnailURL ==
@@ -116,7 +116,7 @@ class _PodcastViewWidgetState extends State<PodcastViewWidget> {
                                             isProfilePicture: false,
                                             fit: BoxFit.cover,
                                             imagePathOrUrl:
-                                                "$baseUrl${userProfileController.podcastFeedData[index].thumnailURL}"),
+                                                "$baseForImage${userProfileController.podcastFeedData[index].thumnailURL}"),
                                       ),
                           ),
                         ),

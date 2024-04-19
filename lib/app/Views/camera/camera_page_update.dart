@@ -6,12 +6,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:watermel/app/Views/camera/animated_widgets.dart';
+import 'package:watermel/app/Views/camera/edit_video_page.dart';
 import 'package:watermel/app/Views/camera/video_preview.dart';
 import 'package:watermel/app/Views/create_new_feed/create_feed_controller.dart';
 import 'package:watermel/app/Views/create_new_feed/create_new_feed.dart';
 import 'package:watermel/app/Views/draft/edit_draft-screen.dart';
 import 'package:watermel/app/utils/theme/fonts.dart';
-import 'package:watermel/app/utils/toast.dart';
 import 'package:watermel/main.dart';
 
 class CameraPage extends StatefulWidget {
@@ -45,7 +45,6 @@ class _CameraPageState extends State<CameraPage> {
   @override
   void initState() {
     super.initState();
-    print("inside the init state");
     _initializeCamera();
     _secondsRemaining.value = is60Second.value == true ? 60 : 90;
   }
@@ -69,7 +68,6 @@ class _CameraPageState extends State<CameraPage> {
     try {
       await controller.startVideoRecording();
       isRecording.value = true;
-
       _timer = Timer.periodic(const Duration(seconds: 1), (Timer timer) {
         IsPause.value == true ? null : recordingDuration.value++;
         IsPause.value == true ? null : currrentSecond++;
@@ -97,10 +95,8 @@ class _CameraPageState extends State<CameraPage> {
       XFile video = await controller.stopVideoRecording();
 
       _timer!.cancel();
-      _secondsRemaining.value = is60Second.value == true ? 60 : 90;
-      currrentSecond.value = 0;
-      _currentCameraIndex.value = 0;
-      // ignore: use_build_context_synchronously
+
+      if (!mounted) return;
       Get.to(() => CapturedVideoPreview(
             isPrivate: widget.isPrivate,
             caption: widget.caption,
@@ -111,6 +107,7 @@ class _CameraPageState extends State<CameraPage> {
             fromEdit: widget.fromEdit,
             videoURL: video.path,
           ));
+      // Get.to(() => EditVideoPage(filePath: video.path));
     } on CameraException catch (e) {
       print(e);
     }
@@ -124,30 +121,31 @@ class _CameraPageState extends State<CameraPage> {
     return PopScope(
       canPop: false,
       onPopInvoked: (v) async {
-        widget.fromEdit == true
-            ? Get.offAll(
-                () => EditDraftScreen(
-                      fromVideoRecording: false,
-                      isPrivate: widget.isPrivate,
-                      thumbnailURL: widget.thumbnailURL,
-                      postType: widget.selectedType,
-                      index: widget.ind,
-                      mediaURL:
-                          widget.draftList?[widget.ind!]["videopath"] ?? "",
-                      draftList: widget.draftList,
-                    ),
-                transition: Transition.leftToRight,
-                duration: const Duration(milliseconds: 400))
-            : Get.offAll(
-                () => CreateNewFeedScreen(
-                      videoPath: widget.mediaURL,
-                      caption: widget.caption,
-                      thumbnailURl: widget.thumbnailURL,
-                      selectedType: widget.selectedType,
-                      fromVideoRecording: false,
-                    ),
-                transition: Transition.leftToRight,
-                duration: const Duration(milliseconds: 400));
+        Get.back();
+        // widget.fromEdit == true
+        //     ? Get.offAll(
+        //         () => EditDraftScreen(
+        //               fromVideoRecording: false,
+        //               isPrivate: widget.isPrivate,
+        //               thumbnailURL: widget.thumbnailURL,
+        //               postType: widget.selectedType,
+        //               index: widget.ind,
+        //               mediaURL:
+        //                   widget.draftList?[widget.ind!]["videopath"] ?? "",
+        //               draftList: widget.draftList,
+        //             ),
+        //         transition: Transition.leftToRight,
+        //         duration: const Duration(milliseconds: 400))
+        //     : Get.offAll(
+        //         () => CreateNewFeedScreen(
+        //               videoPath: widget.mediaURL,
+        //               caption: widget.caption,
+        //               thumbnailURl: widget.thumbnailURL,
+        //               selectedType: widget.selectedType,
+        //               fromVideoRecording: false,
+        //             ),
+        //         transition: Transition.leftToRight,
+        //         duration: const Duration(milliseconds: 400));
       },
       child: Scaffold(
         backgroundColor: Colors.black,
@@ -225,33 +223,34 @@ class _CameraPageState extends State<CameraPage> {
               left: Insets.i20,
               child: InkWell(
                 onTap: () {
-                  CreateFeedController createFeedController =
-                      Get.put(CreateFeedController());
-                  widget.fromEdit == true
-                      ? Get.offAll(
-                          () => EditDraftScreen(
-                                fromVideoRecording: false,
-                                isPrivate: widget.isPrivate,
-                                thumbnailURL: widget.thumbnailURL,
-                                postType: widget.selectedType,
-                                index: widget.ind,
-                                mediaURL: widget.draftList?[widget.ind!]
-                                        ["videopath"] ??
-                                    "",
-                                draftList: widget.draftList,
-                              ),
-                          transition: Transition.leftToRight,
-                          duration: const Duration(milliseconds: 400))
-                      : Get.offAll(
-                          () => CreateNewFeedScreen(
-                                videoPath: widget.mediaURL,
-                                caption: widget.caption,
-                                thumbnailURl: widget.thumbnailURL,
-                                selectedType: widget.selectedType,
-                                fromVideoRecording: false,
-                              ),
-                          transition: Transition.leftToRight,
-                          duration: const Duration(milliseconds: 400));
+                  Get.back();
+                  // CreateFeedController createFeedController =
+                  //     Get.put(CreateFeedController());
+                  // widget.fromEdit == true
+                  //     ? Get.offAll(
+                  //         () => EditDraftScreen(
+                  //               fromVideoRecording: false,
+                  //               isPrivate: widget.isPrivate,
+                  //               thumbnailURL: widget.thumbnailURL,
+                  //               postType: widget.selectedType,
+                  //               index: widget.ind,
+                  //               mediaURL: widget.draftList?[widget.ind!]
+                  //                       ["videopath"] ??
+                  //                   "",
+                  //               draftList: widget.draftList,
+                  //             ),
+                  //         transition: Transition.leftToRight,
+                  //         duration: const Duration(milliseconds: 400))
+                  //     : Get.offAll(
+                  //         () => CreateNewFeedScreen(
+                  //               videoPath: widget.mediaURL,
+                  //               caption: widget.caption,
+                  //               thumbnailURl: widget.thumbnailURL,
+                  //               selectedType: widget.selectedType,
+                  //               fromVideoRecording: false,
+                  //             ),
+                  //         transition: Transition.leftToRight,
+                  //         duration: const Duration(milliseconds: 400));
                 },
                 child: const Icon(
                   Icons.close,
@@ -273,16 +272,19 @@ class _CameraPageState extends State<CameraPage> {
   }
 
   Future<void> _pauseRecording() async {
-    IsPause.value = true;
+    print("In side the Pause");
 
     try {
       await controller.pauseVideoRecording();
+
+      IsPause.value = true;
     } catch (e) {
       print('Error pausing video recording: $e');
     }
   }
 
   Future<void> _resumeRecording() async {
+    print("In side the resume");
     IsPause.value = false;
 
     try {
@@ -313,18 +315,16 @@ class _CameraPageState extends State<CameraPage> {
   }
 
   void _toggleCamera() async {
-    _currentCameraIndex.value = _currentCameraIndex.value == 1 ? 0 : 1;
+    _currentCameraIndex.value =
+        (_currentCameraIndex.value + 1) % cameras!.length;
     CameraDescription newCamera = cameras![_currentCameraIndex.value];
-
-    await controller.setDescription(newCamera).whenComplete(() async {
-      await _resumeRecording();
-    });
+    await controller.setDescription(newCamera);
   }
 
   RxBool IsPause = false.obs;
-  // void _togglePausePLay() async {
-  //   IsPause.value == true ? _resumeRecording() : _pauseRecording();
-  // }
+  void _togglePausePLay() async {
+    IsPause.value == true ? _resumeRecording() : _pauseRecording();
+  }
 
   RxDouble minAvailableZoom = 1.0.obs;
   RxDouble maxAvailableZoom = 1.0.obs;
@@ -340,35 +340,36 @@ class _CameraPageState extends State<CameraPage> {
     await controller.setZoomLevel(_zoomLevel);
   }
 
-  bool isFirstTime = true;
-
   Widget animatedProgressButton() {
     return GestureDetector(
-      onVerticalDragStart: (details) {
-        isRecording.value == true && IsPause.value == false
-            ? _initialVerticalPosition = details.globalPosition.dy
-            : null;
-      },
-      onVerticalDragUpdate: (details) {
-        final delta =
-            (_initialVerticalPosition - details.globalPosition.dy) / 200.0;
-        isRecording.value == true && IsPause.value == false
-            ? _updateZoomLevel(delta)
-            : null;
-      },
-      onVerticalDragEnd: (details) {
-        _pauseRecording();
-      },
-      onTapDown: (s) async {
+      onLongPress: () async {
         if (isRecording.value == true) {
           IsPause.value == true ? await _resumeRecording() : null;
         } else {
           await _startVideoRecording();
         }
       },
-      onTapUp: (s) async {
+      onLongPressEnd: (s) async {
         await _pauseRecording();
       },
+      onTap: () {
+        isRecording.value == true ? _togglePausePLay() : _startVideoRecording();
+      },
+      // onVerticalDragStart: (details) {
+      //   isRecording.value == true && IsPause.value == false
+      //       ? _initialVerticalPosition = details.globalPosition.dy
+      //       : null;
+      // },
+      // onVerticalDragUpdate: (details) {
+      //   final delta =
+      //       (_initialVerticalPosition - details.globalPosition.dy) / 200.0;
+      //   isRecording.value == true && IsPause.value == false
+      //       ? _updateZoomLevel(delta)
+      //       : null;
+      // },
+      // onVerticalDragEnd: (details) {
+      //   _pauseRecording();
+      // },
       child: Obx(
         () => AnimatedContainer(
           duration: const Duration(milliseconds: 200),

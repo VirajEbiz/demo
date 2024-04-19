@@ -41,9 +41,11 @@ class AuthMethods {
         'phone_number': phone,
         "device_token": await CommonMethod().deviceToken(),
       };
-      jsonDB['file'] = [
-        await fm.MultipartFile.fromFile(file, filename: 'profileImage.jpeg')
-      ];
+      if (file != '') {
+        jsonDB['file'] = [
+          await fm.MultipartFile.fromFile(file, filename: 'profileImage.jpeg')
+        ];
+      }
       log("request Param=====${jsonDB.toString()}");
       formData1 = dio.FormData.fromMap(jsonDB);
       var response =

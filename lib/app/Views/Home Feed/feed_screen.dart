@@ -1,13 +1,20 @@
 import 'package:flutter/cupertino.dart';
+import 'package:chip_list/chip_list.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:watermel/app/Views/Home%20Feed/controllers/feed_home_controller.dart';
-import 'package:watermel/app/Views/Home%20Feed/home_widgets/feed_detail_screen.dart';
 import 'package:watermel/app/Views/Home%20Feed/controllers/scroll_controller.dart';
 import 'package:watermel/app/Views/Home%20Feed/home_widgets/autoplayFeed_widget.dart';
+import 'package:watermel/app/Views/Home%20Feed/home_widgets/feed_detail_screen.dart';
+import 'package:watermel/app/Views/search/search_page.dart';
+import 'package:watermel/app/Views/trendingDebates/controller/debates_controller.dart';
 import 'package:watermel/app/Views/user_profile/user_profile_backup.dart';
 import 'package:visibility_detector/visibility_detector.dart';
+import 'package:watermel/app/core/helpers/api_manager.dart';
 import 'package:watermel/app/core/helpers/contants.dart';
 import 'package:watermel/app/widgets/content_button_widget.dart';
 import 'package:watermel/app/Views/Home%20Feed/home_widgets/divider_widget.dart';
@@ -36,6 +43,7 @@ class _FeedScreenState extends State<FeedScreen> with WidgetsBindingObserver {
   final HomeScrollController _scrollController =
       Get.put(HomeScrollController());
   final Rx<int> _focusedIndex = Rx<int>(-1);
+  // final DebatesController debatesController = Get.put(DebatesController());
 
   @override
   void initState() {
@@ -46,6 +54,11 @@ class _FeedScreenState extends State<FeedScreen> with WidgetsBindingObserver {
       homeFeedController.isSelected.value = true;
       homeFeedController.isSelectedtype.value = "Read";
       // Future.delayed(const Duration(milliseconds: 10));
+      if (homeFeedController.selectedTopic.value != "") {
+        homeFeedController.selectedTopicIndex.value = 1;
+      }
+      // debatesController.getTrendingDebates();
+      homeFeedController.getTrendingHashtags();
       setState(() {});
       getData();
     });
@@ -53,10 +66,14 @@ class _FeedScreenState extends State<FeedScreen> with WidgetsBindingObserver {
 
   Future getData() async {
     homeFeedController.page = 1;
-    homeFeedController.peopleYouKnowDataPage = 1;
-    homeFeedController.homeFeedList.clear();
-    homeFeedController.homeFeedList.refresh();
-    homeFeedController.peopleYouKnow(true);
+    if (homeFeedController.selectedTopic.value == "") {
+      homeFeedController.peopleYouKnowDataPage = 1;
+      homeFeedController.homeFeedList.clear();
+      homeFeedController.homeFeedList.refresh();
+      homeFeedController.peopleYouKnow(true);
+    } else {
+      homeFeedController.getSeedsByTopic(true);
+    }
   }
 
   bool onNotification(ScrollNotification notification) {
@@ -64,18 +81,16 @@ class _FeedScreenState extends State<FeedScreen> with WidgetsBindingObserver {
       if (notification.metrics.pixels == notification.metrics.maxScrollExtent) {
         homeFeedController.page++;
         homeFeedController.peopleYouKnowDataPage++;
-        // if (homeFeedController.peopleCurrentPage.value <
-        //     (homeFeedController.peopleTotalPage.value)) {
-        //   homeFeedController.peopleYouKnow(false);
-        // }
         if (homeFeedController.currentPage.value <
             (homeFeedController.totalPage.value)) {
-          homeFeedController.getAllFeedData(false, true);
+          homeFeedController.selectedTopic.value == ""
+              ? homeFeedController.getAllFeedData(false, true)
+              : homeFeedController.getSeedsByTopic(false);
           // homeFeedController.page == homeFeedController.totalPage.value
           //     ? homeFeedController.noMoreFeeds.value = "No New Post!"
           //     : null;
         } else {
-          homeFeedController.noMoreFeeds.value = "No New Post!";
+          homeFeedController.noMoreFeeds.value = "No new posts!";
         }
       }
     }
@@ -108,129 +123,372 @@ class _FeedScreenState extends State<FeedScreen> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      body: NotificationListener(
-        onNotification: onNotification,
-        child: CustomScrollView(
-          controller: _scrollController.scrollController,
-          physics: const BouncingScrollPhysics(),
-          shrinkWrap: true, // Add this line
-          slivers: [
-            /**
-             * App bar
-             */
-            SliverAppBar(
-              scrolledUnderElevation: 0.0,
-              backgroundColor: MyColors.whiteColor,
-              expandedHeight: Get.height * 0.2,
-              floating: true,
-              pinned: false,
-              flexibleSpace: FlexibleSpaceBar(
-                /**
-                 * Main App Bar
-                 */
-                background: Column(
-                  children: [
-                    FeedAppBarWidget(
-                      notificationTap: () async {
-                        Get.to(() => NotificationListScreen(
-                              fromMain: false,
-                            ));
-                      },
-                      mesageTap: () {
-                        // ApiManager().setRefreshTokenAPI();
-                        Get.to(() => ComingSoonWidget(
-                              fromHome: false,
-                            ));
-                      },
-                      searchTap: () {
-                        homeFeedController.isSearch.value = true;
-                        Get.to(() => const SearchHomeScreen());
-                      },
-                    ),
-                    MyCustomDivider(
-                      sized: Insets.i5,
-                    ),
-                    /**
-                     * Main Content Type Button
-                     */
-                    Padding(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: Insets.i20),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: List.generate(
-                          homeFeedController.buttonList.length,
-                          (index) => InkWell(
-                            onTap: () async {
-                              homeFeedController.homeFeedList.clear();
-                              if (homeFeedController.selectedIndex != index) {
-                                homeFeedController.selectedIndex = index;
-                                if (homeFeedController.buttonList[index]
-                                        ["IsSelected"] ==
-                                    homeFeedController.selectedIndex) {
-                                  homeFeedController.isSelected.value = true;
+    if (homeFeedController.selectedTopic.value != "") {
+      setState(() {
+        homeFeedController.selectedTopicIndex.value = 1;
+      });
+    }
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) async {
+        if (homeFeedController.selectedTopicIndex.value != 0) {
+          homeFeedController.selectedTopicIndex.value = 0;
+          homeFeedController.selectedTopic.value = "";
+          homeFeedController.homeFeedList.clear();
+          homeFeedController.getAllFeedData(true, false);
+        } else {
+          await showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text("WaterMel App"),
+              content: const Text("Are you sure You want close App?"),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text("No"),
+                ),
+                TextButton(
+                  onPressed: () {
+                    SystemNavigator.pop();
+                  },
+                  child: const Text("Yes"),
+                ),
+              ],
+            ),
+          );
+        }
+      },
+      child: Scaffold(
+        resizeToAvoidBottomInset: false,
+        body: NotificationListener(
+          onNotification: onNotification,
+          child: CustomScrollView(
+            controller: _scrollController.scrollController,
+            physics: const BouncingScrollPhysics(),
+            shrinkWrap: true, // Add this line
+            slivers: [
+              /**
+               * App bar
+               */
+              SliverAppBar(
+                scrolledUnderElevation: 0.0,
+                backgroundColor: MyColors.whiteColor,
+                expandedHeight: 140,
+                floating: true,
+                pinned: false,
+                flexibleSpace: FlexibleSpaceBar(
+                  /**
+                   * Main App Bar
+                   */
+                  background: Column(
+                    children: [
+                      FeedAppBarWidget(
+                        notificationTap: () async {
+                          Get.to(() => NotificationListScreen(
+                                fromMain: false,
+                              ));
+                        },
+                        mesageTap: () {
+                          Get.to(() => ComingSoonWidget(
+                                fromHome: false,
+                              ));
+                        },
+                        searchTap: () {
+                          homeFeedController.isSearch.value = true;
+                          Get.to(() => const SearchPage());
+                        },
+                      ),
+                      // MyCustomDivider(
+                      //   sized: Insets.i7,
+                      // ),
+                      const SizedBox(
+                        height: Insets.i14,
+                      ),
+                      /**
+                       * Main Content Type Button
+                       */
+                      Padding(
+                        padding:
+                            const EdgeInsets.symmetric(horizontal: Insets.i20),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: List.generate(
+                            homeFeedController.buttonList.length,
+                            (index) => InkWell(
+                              onTap: () async {
+                                homeFeedController.homeFeedList.clear();
+                                if (homeFeedController.selectedIndex != index) {
+                                  homeFeedController.selectedIndex = index;
+                                  if (homeFeedController.buttonList[index]
+                                          ["IsSelected"] ==
+                                      homeFeedController.selectedIndex) {
+                                    homeFeedController.isSelected.value = true;
+                                  }
+                                  await getData();
+                                  setState(() {});
+                                } else {
+                                  Get.find<HomeScrollController>()
+                                      .scrollToTop();
                                 }
-                                await getData();
-                                setState(() {});
-                              } else {
-                                Get.find<HomeScrollController>().scrollToTop();
-                              }
-                            },
-                            child: Padding(
-                              padding: index == 1
-                                  ? const EdgeInsets.symmetric(
-                                      horizontal: Insets.i7)
-                                  : const EdgeInsets.all(0),
-                              child: MainContentTypeButtonWidget(
-                                fromHome: true,
-                                index: index,
-                                buttonName: homeFeedController.buttonList[index]
-                                    ["ButtonName"],
-                                isSelected: homeFeedController.isSelected,
-                                iconName: homeFeedController.buttonList[index]
-                                    ["ButtonIcon"],
+                              },
+                              child: Padding(
+                                padding: index == 1
+                                    ? const EdgeInsets.symmetric(horizontal: 0)
+                                    : const EdgeInsets.all(0),
+                                child: MainContentTypeButtonWidget(
+                                  fromHome: true,
+                                  index: index,
+                                  buttonName: homeFeedController
+                                      .buttonList[index]["ButtonName"],
+                                  isSelected: homeFeedController.isSelected,
+                                  iconName: homeFeedController.buttonList[index]
+                                      ["ButtonIcon"],
+                                ),
                               ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                    MyCustomDivider2(
-                      sized: Insets.i7,
-                    ),
-                  ],
+                      MyCustomDivider2(
+                        sized: Insets.i7,
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            /**
-             * Refresh Indicator
-             */
-            CupertinoSliverRefreshControl(
-              onRefresh: () {
-                homeFeedController.homeFeedList.clear();
-                homeFeedController.homeFeedList.refresh();
-                return getData();
-              },
-            ),
-            /**
-             * Main Content
-             */
-            SliverList(
-              delegate: SliverChildListDelegate([
-                Obx(() => homeFeedController.selectedIndex == 2
-                    ? podcastView()
-                    : feedistWidget())
-              ]),
-            ),
-          ],
+              /**
+               * Refresh Indicator
+               */
+              CupertinoSliverRefreshControl(
+                onRefresh: () => getData(),
+              ),
+              /**
+               * Main Content
+               */
+              SliverList(
+                delegate: SliverChildListDelegate([
+                  Obx(() => homeFeedController.selectedIndex == 2
+                      ? podcastView()
+                      : Column(
+                          children: [
+                            Padding(
+                              padding:
+                                  const EdgeInsets.only(bottom: Insets.i20),
+                              child: SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: Row(
+                                  children: [
+                                    const SizedBox(
+                                      width: Insets.i20 - 4,
+                                    ),
+                                    ChipList(
+                                      listOfChipNames: homeFeedController
+                                                  .selectedTopic.value !=
+                                              ""
+                                          ? homeFeedController
+                                                  .trendingHashtagsList
+                                                  .map(
+                                                      (element) => element.name)
+                                                  .toList()
+                                                  .contains(homeFeedController
+                                                      .selectedTopic.value)
+                                              ? homeFeedController
+                                                          .selectedTopicIndex
+                                                          .value ==
+                                                      1
+                                                  ? [
+                                                      "All",
+                                                      homeFeedController
+                                                          .selectedTopic.value,
+                                                      ...homeFeedController
+                                                          .trendingHashtagsList
+                                                          .map((element) =>
+                                                              element.name)
+                                                          .toList()
+                                                        ..remove(
+                                                            homeFeedController
+                                                                .selectedTopic
+                                                                .value)
+                                                    ]
+                                                  : [
+                                                      "All",
+                                                      ...homeFeedController
+                                                          .trendingHashtagsList
+                                                          .map((element) =>
+                                                              element.name)
+                                                          .toList()
+                                                    ]
+                                              : [
+                                                  "All",
+                                                  homeFeedController
+                                                      .selectedTopic.value,
+                                                  ...homeFeedController
+                                                      .trendingHashtagsList
+                                                      .map((element) =>
+                                                          element.name)
+                                                      .toList()
+                                                ]
+                                          : [
+                                              "All",
+                                              ...homeFeedController
+                                                  .trendingHashtagsList
+                                                  .map(
+                                                      (element) => element.name)
+                                                  .toList()
+                                            ],
+                                      // ? debatesController.trendingDebates
+                                      //         .map((element) =>
+                                      //             element.topicName)
+                                      //         .toList()
+                                      //         .contains(homeFeedController
+                                      //             .selectedTopic.value)
+                                      //     ? homeFeedController
+                                      //                 .selectedTopicIndex
+                                      //                 .value ==
+                                      //             1
+                                      //         ? [
+                                      //             "All",
+                                      //             homeFeedController
+                                      //                 .selectedTopic.value,
+                                      //             ...debatesController
+                                      //                 .trendingDebates
+                                      //                 .map((element) =>
+                                      //                     element.topicName)
+                                      //                 .toList()
+                                      //               ..remove(
+                                      //                   homeFeedController
+                                      //                       .selectedTopic
+                                      //                       .value)
+                                      //           ]
+                                      //         : [
+                                      //             "All",
+                                      //             ...debatesController
+                                      //                 .trendingDebates
+                                      //                 .map((element) =>
+                                      //                     element.topicName)
+                                      //                 .toList()
+                                      //           ]
+                                      //     : [
+                                      //         "All",
+                                      //         homeFeedController
+                                      //             .selectedTopic.value,
+                                      //         ...debatesController
+                                      //             .trendingDebates
+                                      //             .map((element) =>
+                                      //                 element.topicName)
+                                      //             .toList()
+                                      //       ]
+                                      // : [
+                                      //     "All",
+                                      //     ...debatesController.trendingDebates
+                                      //         .map((element) =>
+                                      //             element.topicName)
+                                      //         .toList()
+                                      //   ],
+                                      listOfChipIndicesCurrentlySeclected: [
+                                        homeFeedController
+                                            .selectedTopicIndex.value
+                                      ],
+                                      activeBgColorList: [MyColors.whiteColor],
+                                      activeBorderColorList: [
+                                        MyColors.greenColor
+                                      ],
+                                      activeTextColorList: [
+                                        MyColors.greenColor
+                                      ],
+                                      inactiveTextColorList: [
+                                        MyColors.grayColor
+                                      ],
+                                      inactiveBorderColorList: [
+                                        MyColors.grayColor
+                                      ],
+                                      style: const TextStyle(
+                                          fontSize: FontSizes.s12,
+                                          fontWeight: FontWeight.w900),
+                                      extraOnToggle: (index) {
+                                        String oldTopic = homeFeedController
+                                            .selectedTopic.value;
+                                        if (index == 0) {
+                                          if (homeFeedController
+                                                  .selectedTopic.value !=
+                                              "") {
+                                            homeFeedController
+                                                .selectedTopic.value = "";
+                                            homeFeedController.homeFeedList
+                                                .clear();
+                                          }
+                                          homeFeedController.getAllFeedData(
+                                              true, false);
+                                        } else {
+                                          homeFeedController
+                                                  .selectedTopic.value =
+                                              homeFeedController
+                                                  .trendingHashtagsList[homeFeedController
+                                                                  .selectedTopicIndex
+                                                                  .value ==
+                                                              1 &&
+                                                          homeFeedController
+                                                                  .trendingHashtagsList[
+                                                                      0]
+                                                                  .name !=
+                                                              homeFeedController
+                                                                  .selectedTopic
+                                                                  .value
+                                                      ? index - 2
+                                                      : index - 1]
+                                                  .name;
+                                          // homeFeedController.selectedTopic.value =
+                                          // debatesController
+                                          //     .trendingDebates[homeFeedController
+                                          //                     .selectedTopicIndex
+                                          //                     .value ==
+                                          //                 1 &&
+                                          //             debatesController
+                                          //                     .trendingDebates[
+                                          //                         0]
+                                          //                     .topicName !=
+                                          //                 homeFeedController
+                                          //                     .selectedTopic
+                                          //                     .value
+                                          //         ? index - 2
+                                          //         : index - 1]
+                                          //     .topicName;
+                                          homeFeedController.getSeedsByTopic(
+                                              true,
+                                              isInChipList: true);
+                                        }
+                                        homeFeedController.selectedTopicIndex
+                                            .value = homeFeedController
+                                                        .selectedTopicIndex
+                                                        .value ==
+                                                    1 &&
+                                                homeFeedController
+                                                        .trendingHashtagsList[0]
+                                                        .name !=
+                                                    oldTopic
+                                            ? index <= 1
+                                                ? index
+                                                : index - 1
+                                            : index;
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            feedistWidget(),
+                          ],
+                        ))
+                ]),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  feedistWidget() {
+  Widget feedistWidget() {
     if ((homeFeedController.homeFeedList.isEmpty ||
         homeFeedController.homeFeedList == null)) {
       return CommonMethod().venueListEffect(5);
@@ -504,7 +762,7 @@ class _FeedScreenState extends State<FeedScreen> with WidgetsBindingObserver {
                                                 .selectedIndex ==
                                             1 ||
                                         homeFeedController.selectedIndex == 2
-                                    ? "$baseUrl${homeFeedController.homeFeedList[index].thumbnailURL}"
+                                    ? "$baseForImage${homeFeedController.homeFeedList[index].thumbnailURL}"
                                     : homeFeedController.homeFeedList[index]
                                                     .mediaData ==
                                                 null ||
@@ -513,7 +771,7 @@ class _FeedScreenState extends State<FeedScreen> with WidgetsBindingObserver {
                                                 .mediaData!
                                                 .isEmpty
                                         ? ""
-                                        : "$baseUrl${homeFeedController.homeFeedList[index].mediaData?[0].image ?? ""}",
+                                        : "$baseForImage${homeFeedController.homeFeedList[index].mediaData?[0].image ?? ""}",
                                 userProfile: homeFeedController
                                                 .homeFeedList[index]
                                                 .user
@@ -527,7 +785,7 @@ class _FeedScreenState extends State<FeedScreen> with WidgetsBindingObserver {
                                                 .profilePicture ==
                                             ""
                                     ? ""
-                                    : "$baseUrl${homeFeedController.homeFeedList[index].user?.userprofile!.profilePicture}",
+                                    : "$baseForImage${homeFeedController.homeFeedList[index].user?.userprofile!.profilePicture}",
                               )
                             : ReadFeedWidget(
                                 shareURL: homeFeedController
@@ -556,7 +814,7 @@ class _FeedScreenState extends State<FeedScreen> with WidgetsBindingObserver {
                                                 .selectedIndex ==
                                             1 ||
                                         homeFeedController.selectedIndex == 2
-                                    ? "$baseUrl${homeFeedController.homeFeedList[index].thumbnailURL}"
+                                    ? "$baseForImage${homeFeedController.homeFeedList[index].thumbnailURL}"
                                     : homeFeedController.homeFeedList[index]
                                                     .mediaData ==
                                                 null ||
@@ -565,7 +823,7 @@ class _FeedScreenState extends State<FeedScreen> with WidgetsBindingObserver {
                                                 .mediaData!
                                                 .isEmpty
                                         ? ""
-                                        : "$baseUrl${homeFeedController.homeFeedList[index].mediaData?[0].image ?? ""}",
+                                        : "$baseForImage${homeFeedController.homeFeedList[index].mediaData?[0].image ?? ""}",
                                 userName: homeFeedController
                                         .homeFeedList[index].user?.username ??
                                     "",
@@ -678,11 +936,11 @@ class _FeedScreenState extends State<FeedScreen> with WidgetsBindingObserver {
                                                 .thumbnailURL ==
                                             null
                                         ? ""
-                                        : "$baseUrl${homeFeedController.homeFeedList[index].thumbnailURL}",
+                                        : "$baseForImage${homeFeedController.homeFeedList[index].thumbnailURL}",
                                     caption: homeFeedController
                                         .homeFeedList[index].caption,
                                     mediaURL:
-                                        "$baseUrl${homeFeedController.homeFeedList[index].mediaData!.first.video}",
+                                        "$baseForImage${homeFeedController.homeFeedList[index].mediaData!.first.video}",
                                     mediaType: 1,
                                     index: index,
                                     userName: homeFeedController
@@ -705,7 +963,7 @@ class _FeedScreenState extends State<FeedScreen> with WidgetsBindingObserver {
                                                     .profilePicture ==
                                                 ""
                                         ? ""
-                                        : "$baseUrl${homeFeedController.homeFeedList[index].user!.userprofile!.profilePicture}",
+                                        : "$baseForImage${homeFeedController.homeFeedList[index].user!.userprofile!.profilePicture}",
                                   )
                                 : FeedDetailScreen(
                                     myReaction: homeFeedController
@@ -727,11 +985,11 @@ class _FeedScreenState extends State<FeedScreen> with WidgetsBindingObserver {
                                                 .thumbnailURL ==
                                             null
                                         ? ""
-                                        : "$baseUrl${homeFeedController.homeFeedList[index].thumbnailURL}",
+                                        : "$baseForImage${homeFeedController.homeFeedList[index].thumbnailURL}",
                                     caption: homeFeedController
                                         .homeFeedList[index].caption,
                                     mediaURL:
-                                        "$baseUrl${homeFeedController.homeFeedList[index].mediaData!.first.audio}",
+                                        "$baseForImage${homeFeedController.homeFeedList[index].mediaData!.first.audio}",
                                     mediaType: 2,
                                     index: index,
                                     userName: homeFeedController
@@ -742,7 +1000,7 @@ class _FeedScreenState extends State<FeedScreen> with WidgetsBindingObserver {
                                         .userprofile!
                                         .displayName,
                                     userProfile:
-                                        "$baseUrl${homeFeedController.homeFeedList[index].user!.userprofile!.profilePicture}",
+                                        "$baseForImage${homeFeedController.homeFeedList[index].user!.userprofile!.profilePicture}",
                                   ));
                           },
                           child: Column(
@@ -777,7 +1035,7 @@ class _FeedScreenState extends State<FeedScreen> with WidgetsBindingObserver {
                                               child: CustomImageView(
                                                 isProfilePicture: false,
                                                 imagePathOrUrl:
-                                                    "$baseUrl${homeFeedController.homeFeedList[index].thumbnailURL}",
+                                                    "$baseForImage${homeFeedController.homeFeedList[index].thumbnailURL}",
                                                 fit: BoxFit.cover,
                                               ),
                                             )
@@ -795,7 +1053,7 @@ class _FeedScreenState extends State<FeedScreen> with WidgetsBindingObserver {
                                               child: CustomImageView(
                                                 isProfilePicture: false,
                                                 imagePathOrUrl:
-                                                    "$baseUrl${homeFeedController.homeFeedList[index].thumbnailURL}",
+                                                    "$baseForImage${homeFeedController.homeFeedList[index].thumbnailURL}",
                                                 fit: BoxFit.cover,
                                               ),
                                             ),

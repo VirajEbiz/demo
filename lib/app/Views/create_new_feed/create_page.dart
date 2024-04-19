@@ -7,9 +7,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
+import 'package:hashtagable_v3/hashtagable.dart';
 import 'package:introduction_screen/introduction_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:watermel/app/Views/camera/camera_page.dart';
 import 'package:watermel/app/Views/camera/camera_page_update.dart';
 import 'package:watermel/app/Views/create_new_feed/create_feed_controller.dart';
 import 'package:watermel/app/Views/draft/draftlist.dart';
@@ -53,8 +53,6 @@ class _CreatePageState extends State<CreatePage> {
               ? TextButton(
                   onPressed: () async {
                     if (createFeedController.selectedFilePath.value != "" ||
-                        createFeedController.selectedThumbnailPath.value !=
-                            "" ||
                         createFeedController.captionController.text != "") {
                       postAddDraftMethod();
                     } else {
@@ -68,416 +66,439 @@ class _CreatePageState extends State<CreatePage> {
       ),
       body: SafeArea(
         child: Center(
-          child: IntroductionScreen(
-            key: createKey,
-            globalBackgroundColor: Colors.white,
-            autoScrollDuration: null,
-            freeze: true,
-            showDoneButton: true,
-            done: const Text("Post"),
-            onDone: () async {
-              log("Check pass data ==> ${createFeedController.isSelectedtype.value.toString().toLowerCase()}");
-              if (createFeedController.selectedIndex == 0) {
-                if (createFeedController.selectedIndex == 0 &&
-                        createFeedController.captionController.text != "" ||
-                    createFeedController.selectedFilePath.value != "") {
-                  await createFeedController.CreateNewFeed("addNew", false);
-                } else {
-                  Toaster().warning("Image or Caption is required");
-                }
-              }
-              if (createFeedController.selectedIndex == 1 ||
-                  createFeedController.selectedIndex == 2) {
-                if (createFeedController.selectedIndex != 0 &&
-                    createFeedController.selectedFilePath.value == "") {
-                  Toaster().warning("please select a file");
-                } else {
-                  if (createFeedController.selectedThumbnailPath.value == "") {
-                    Toaster().warning("please select thumbnail");
+          child: Obx(
+            () => IntroductionScreen(
+              key: createKey,
+              globalBackgroundColor: Colors.white,
+              autoScrollDuration: null,
+              freeze: true,
+              showDoneButton: true,
+              done: const Text("Post"),
+              onDone: () async {
+                log("Check pass data ==> ${createFeedController.isSelectedtype.value.toString().toLowerCase()}");
+                if (createFeedController.selectedIndex == 0) {
+                  if (createFeedController.selectedIndex == 0 &&
+                          createFeedController.captionController.text != "" ||
+                      createFeedController.selectedFilePath.value != "") {
+                    await createFeedController.CreateNewFeed("addNew", true);
                   } else {
-                    await createFeedController.CreateNewFeed("addNew", false);
+                    Toaster().warning("Image or Caption is required");
                   }
                 }
-              }
-            },
-            showBackButton: true,
-            overrideBack: TextButton(
-              onPressed: () {
-                setState(() {
-                  currentPage -= 1;
-                });
-                createKey.currentState?.animateScroll(currentPage);
+                if (createFeedController.selectedIndex == 1 ||
+                    createFeedController.selectedIndex == 2) {
+                  if (createFeedController.selectedIndex != 0 &&
+                      createFeedController.selectedFilePath.value == "") {
+                    Toaster().warning("please select a file");
+                  } else {
+                    await createFeedController.CreateNewFeed("addNew", true);
+                  }
+                }
               },
-              style: TextButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8.0),
+              showBackButton: true,
+              overrideBack: TextButton(
+                onPressed: () {
+                  setState(() {
+                    currentPage -= 1;
+                  });
+                  createKey.currentState?.animateScroll(currentPage);
+                },
+                style: TextButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
                 ),
+                child: const Icon(Icons.arrow_back),
               ),
-              child: const Icon(Icons.arrow_back),
-            ),
-            overrideNext: currentPage == 0
-                ? const SizedBox(
-                    height: 50,
-                  )
-                : TextButton(
-                    onPressed: () {
-                      setState(() {
-                        currentPage += 1;
-                      });
-                      createKey.currentState?.animateScroll(currentPage);
-                    },
-                    style: TextButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8.0),
+              overrideNext: currentPage == 0
+                  ? const SizedBox(
+                      height: 50,
+                    )
+                  : TextButton(
+                      onPressed: createFeedController.selectedFilePath == "" &&
+                                  createFeedController.selectedIndex == 0 ||
+                              createFeedController.selectedFilePath.value != ""
+                          ? () {
+                              setState(() {
+                                currentPage += 1;
+                              });
+                              createKey.currentState
+                                  ?.animateScroll(currentPage);
+                            }
+                          : null,
+                      style: TextButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
                       ),
+                      child: Text(createFeedController.selectedIndex == 0 &&
+                              createFeedController.selectedFilePath.value == ""
+                          ? "Skip"
+                          : "Next"),
                     ),
-                    child: const Text("Next"),
-                  ),
-            showNextButton: true,
-            curve: Curves.easeOutQuad,
-            controlsMargin: const EdgeInsets.all(16),
-            dotsDecorator: const DotsDecorator(
-              size: Size(10.0, 10.0),
-              color: Colors.black,
-              activeSize: Size(22.0, 10.0),
-              activeShape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(25.0)),
-              ),
-            ),
-            pages: [
-              // Select the type of content to create
-              PageViewModel(
-                title: "What would you like to create?",
-                decoration: const PageDecoration(
-                  titleTextStyle: TextStyle(
-                    fontSize: 28.0,
-                    fontWeight: FontWeight.w700,
-                  ),
-                  bodyPadding: EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 16.0),
-                  pageColor: Colors.white,
-                  imagePadding: EdgeInsets.zero,
+              showNextButton: true,
+              curve: Curves.easeOutQuad,
+              controlsMargin: const EdgeInsets.all(16),
+              dotsDecorator: const DotsDecorator(
+                size: Size(10.0, 10.0),
+                color: Colors.black,
+                activeSize: Size(22.0, 10.0),
+                activeShape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(25.0)),
                 ),
-                bodyWidget: Column(
-                  children: [
-                    const SizedBox(
-                      height: 80,
+              ),
+              pages: [
+                /**
+                 * Select the type of content to create
+                 */
+                PageViewModel(
+                  title: "What would you like to create?",
+                  decoration: const PageDecoration(
+                    titleTextStyle: TextStyle(
+                      fontSize: 28.0,
+                      fontWeight: FontWeight.w700,
                     ),
-                    for (var index = 0;
-                        index < createFeedController.buttonList.length;
-                        index++)
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: InkWell(
-                          onTap: () {
-                            setState(() {
-                              createFeedController.selectedIndex = index;
-                              currentPage = 1;
-                              createFeedController.selectedFilePath.value = "";
-                              createFeedController.captionController.clear();
-                            });
-                            createKey.currentState?.animateScroll(1);
-                          },
-                          child: Container(
-                            height: Get.height * 0.1,
-                            // width: Get.width * 0.28,
-                            decoration: BoxDecoration(
-                              color: MyColors.greenColor,
-                              border: Border.all(color: Colors.transparent),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            alignment: Alignment.center,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                SvgPicture.asset(
-                                  createFeedController.buttonList[index]
-                                      ["ButtonIcon"],
-                                  color: MyColors.whiteColor,
-                                  height: Insets.i30,
-                                  width: Insets.i30,
-                                ),
-                                const SizedBox(
-                                  width: Insets.i5,
-                                ),
-                                MyText(
-                                  text_name: createFeedController
-                                      .buttonList[index]["ButtonName"],
-                                  txtcolor: MyColors.whiteColor,
-                                  fontWeight: FontWeight.w500,
-                                  txtfontsize: FontSizes.s16,
-                                ),
-                              ],
+                    bodyPadding: EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 16.0),
+                    pageColor: Colors.white,
+                    imagePadding: EdgeInsets.zero,
+                  ),
+                  bodyWidget: Column(
+                    children: [
+                      const SizedBox(
+                        height: 80,
+                      ),
+                      for (var index = 0;
+                          index < createFeedController.buttonList.length;
+                          index++)
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: InkWell(
+                            onTap: () {
+                              setState(() {
+                                createFeedController.selectedIndex = index;
+                                currentPage = 1;
+                                createFeedController.selectedFilePath.value =
+                                    "";
+                                createFeedController.captionController.clear();
+                                createFeedController.isSelectedtype.value =
+                                    createFeedController.buttonList[index]
+                                            ["ButtonName"]
+                                        .toString()
+                                        .toLowerCase();
+                              });
+                              createKey.currentState?.animateScroll(1);
+                            },
+                            child: Container(
+                              height: Get.height * 0.1,
+                              // width: Get.width * 0.28,
+                              decoration: BoxDecoration(
+                                color: MyColors.greenColor,
+                                border: Border.all(color: Colors.transparent),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              alignment: Alignment.center,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  SvgPicture.asset(
+                                    createFeedController.buttonList[index]
+                                        ["ButtonIcon"],
+                                    color: MyColors.whiteColor,
+                                    height: Insets.i30,
+                                    width: Insets.i30,
+                                  ),
+                                  const SizedBox(
+                                    width: Insets.i5,
+                                  ),
+                                  MyText(
+                                    text_name: createFeedController
+                                        .buttonList[index]["ButtonName"],
+                                    txtcolor: MyColors.whiteColor,
+                                    fontWeight: FontWeight.w500,
+                                    txtfontsize: FontSizes.s16,
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                  ],
-                ),
-              ),
-              // Upload a photo or video
-              PageViewModel(
-                title: createFeedController.selectedIndex == 0
-                    ? "Do you want to upload a photo?"
-                    : "Upload a video",
-                decoration: const PageDecoration(
-                  titleTextStyle: TextStyle(
-                    fontSize: 28.0,
-                    fontWeight: FontWeight.w700,
+                    ],
                   ),
-                  bodyPadding: EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 16.0),
-                  pageColor: Colors.white,
-                  imagePadding: EdgeInsets.zero,
                 ),
-                bodyWidget: Obx(
-                  () => createFeedController.selectedFilePath.value == ""
-                      ? Column(
-                          children: [
-                            const SizedBox(
-                              height: 80,
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: InkWell(
-                                onTap: () => showMyBottomSheet(context, "",
-                                    createFeedController.selectedIndex),
-                                child: Container(
-                                  height: Get.height * 0.1,
-                                  // width: Get.width * 0.28,
-                                  decoration: BoxDecoration(
-                                    color: MyColors.greenColor,
-                                    border:
-                                        Border.all(color: Colors.transparent),
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  alignment: Alignment.center,
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      SvgPicture.asset(
-                                        MyImageURL.upload,
-                                        color: MyColors.whiteColor,
-                                        height: Insets.i35,
-                                        width: Insets.i35,
-                                      ),
-                                      const SizedBox(
-                                        width: Insets.i5,
-                                      ),
-                                      MyText(
-                                        text_name: "Upload",
-                                        txtcolor: MyColors.whiteColor,
-                                        fontWeight: FontWeight.w500,
-                                        txtfontsize: FontSizes.s16,
-                                      ),
-                                    ],
+                /**
+                 * Upload a photo or video
+                 */
+                PageViewModel(
+                  title: createFeedController.selectedIndex == 0
+                      ? "Do you want to upload a photo?"
+                      : "Upload a video",
+                  decoration: const PageDecoration(
+                    titleTextStyle: TextStyle(
+                      fontSize: 28.0,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    bodyPadding: EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 16.0),
+                    pageColor: Colors.white,
+                    imagePadding: EdgeInsets.zero,
+                  ),
+                  bodyWidget: Obx(
+                    () => createFeedController.selectedFilePath.value == ""
+                        ? Column(
+                            children: [
+                              const SizedBox(
+                                height: 80,
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: InkWell(
+                                  onTap: () => showMyBottomSheet(context, "",
+                                      createFeedController.selectedIndex),
+                                  child: Container(
+                                    height: Get.height * 0.1,
+                                    // width: Get.width * 0.28,
+                                    decoration: BoxDecoration(
+                                      color: MyColors.greenColor,
+                                      border:
+                                          Border.all(color: Colors.transparent),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        SvgPicture.asset(
+                                          MyImageURL.upload,
+                                          color: MyColors.whiteColor,
+                                          height: Insets.i35,
+                                          width: Insets.i35,
+                                        ),
+                                        const SizedBox(
+                                          width: Insets.i5,
+                                        ),
+                                        MyText(
+                                          text_name: "Upload",
+                                          txtcolor: MyColors.whiteColor,
+                                          fontWeight: FontWeight.w500,
+                                          txtfontsize: FontSizes.s16,
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                          ],
-                        )
-                      : Column(
-                          children: [
-                            const SizedBox(
-                              height: 80,
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: DottedBorder(
-                                borderType: BorderType.RRect,
-                                dashPattern: const [6, 0, 2, 3],
-                                color: Colors.black,
-                                strokeWidth: 1,
-                                borderPadding: const EdgeInsets.all(0),
-                                radius: const Radius.circular(5),
-                                strokeCap: StrokeCap.round,
-                                child: Container(
-                                  alignment: Alignment.center,
-                                  height: Get.height * 0.27,
-                                  width: Get.width,
-                                  decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(5)),
-                                  child: Obx(
-                                    () => createFeedController
-                                                .selectedFilePath.value !=
-                                            ""
-                                        ? SizedBox(
-                                            height: Get.height,
-                                            width: Get.width,
-                                            child: Stack(
-                                              fit: StackFit.expand,
-                                              clipBehavior: Clip.none,
-                                              children: [
-                                                createFeedController
-                                                            .selectedIndex ==
-                                                        1
-                                                    ? CustomImageView(
-                                                        isProfilePicture: false,
-                                                        fit: BoxFit.cover,
-                                                        radius: Insets.i5,
-                                                        imagePathOrUrl:
-                                                            createFeedController
-                                                                .generatedThumNail
-                                                                .value)
-                                                    : CustomImageView(
-                                                        isProfilePicture: false,
-                                                        fit: BoxFit.cover,
-                                                        fromDraftPodcast: true,
-                                                        radius: Insets.i5,
-                                                        imagePathOrUrl: createFeedController
-                                                                    .selectedIndex ==
-                                                                0
-                                                            ? createFeedController
-                                                                .selectedFilePath
-                                                                .value
-                                                            : "",
+                            ],
+                          )
+                        : Column(
+                            children: [
+                              const SizedBox(
+                                height: 80,
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: DottedBorder(
+                                  borderType: BorderType.RRect,
+                                  dashPattern: const [6, 0, 2, 3],
+                                  color: Colors.black,
+                                  strokeWidth: 1,
+                                  borderPadding: const EdgeInsets.all(0),
+                                  radius: const Radius.circular(5),
+                                  strokeCap: StrokeCap.round,
+                                  child: Container(
+                                    alignment: Alignment.center,
+                                    height: Get.height * 0.27,
+                                    width: Get.width,
+                                    decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(5)),
+                                    child: Obx(
+                                      () => createFeedController
+                                                  .selectedFilePath.value !=
+                                              ""
+                                          ? SizedBox(
+                                              height: Get.height,
+                                              width: Get.width,
+                                              child: Stack(
+                                                fit: StackFit.expand,
+                                                clipBehavior: Clip.none,
+                                                children: [
+                                                  createFeedController
+                                                              .selectedIndex ==
+                                                          1
+                                                      ? CustomImageView(
+                                                          fit: BoxFit.cover,
+                                                          radius: Insets.i5,
+                                                          imagePathOrUrl:
+                                                              createFeedController
+                                                                  .generatedThumNail
+                                                                  .value,
+                                                          isProfilePicture:
+                                                              false,
+                                                        )
+                                                      : CustomImageView(
+                                                          fit: BoxFit.cover,
+                                                          fromDraftPodcast:
+                                                              true,
+                                                          radius: Insets.i5,
+                                                          imagePathOrUrl: createFeedController
+                                                                      .selectedIndex ==
+                                                                  0
+                                                              ? createFeedController
+                                                                  .selectedFilePath
+                                                                  .value
+                                                              : "",
+                                                          isProfilePicture:
+                                                              false,
+                                                        ),
+                                                  Positioned(
+                                                    top: 5,
+                                                    right: 5,
+                                                    child: InkWell(
+                                                      onTap: () {
+                                                        createFeedController
+                                                            .selectedFilePath
+                                                            .value = "";
+                                                        createFeedController
+                                                            .generatedThumNail
+                                                            .value = "";
+                                                      },
+                                                      child: Container(
+                                                        alignment:
+                                                            Alignment.center,
+                                                        height: Insets.i30,
+                                                        width: Insets.i30,
+                                                        decoration:
+                                                            BoxDecoration(
+                                                                shape: BoxShape
+                                                                    .circle,
+                                                                color: MyColors
+                                                                    .lightGray),
+                                                        child: const Icon(
+                                                            Icons.close),
                                                       ),
-                                                Positioned(
-                                                  top: 5,
-                                                  right: 5,
-                                                  child: InkWell(
-                                                    onTap: () {
-                                                      createFeedController
-                                                          .selectedFilePath
-                                                          .value = "";
-                                                      createFeedController
-                                                          .generatedThumNail
-                                                          .value = "";
-                                                    },
-                                                    child: Container(
-                                                      alignment:
-                                                          Alignment.center,
-                                                      height: Insets.i30,
-                                                      width: Insets.i30,
-                                                      decoration: BoxDecoration(
-                                                          shape:
-                                                              BoxShape.circle,
-                                                          color: MyColors
-                                                              .lightGray),
-                                                      child: const Icon(
-                                                          Icons.close),
                                                     ),
                                                   ),
-                                                ),
-                                              ],
+                                                ],
+                                              ),
+                                            )
+                                          : MyText(
+                                              text_name: "No file selected",
+                                              txtcolor: MyColors.grayColor,
+                                              fontWeight: FontWeight.w400,
+                                              txtfontsize: FontSizes.s14,
                                             ),
-                                          )
-                                        : MyText(
-                                            text_name: "No file selected",
-                                            txtcolor: MyColors.grayColor,
-                                            fontWeight: FontWeight.w400,
-                                            txtfontsize: FontSizes.s14,
-                                          ),
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                            if (createFeedController.selectedIndex != 0)
-                              GestureDetector(
-                                onTap: () {
-                                  createFeedController.pickFile(
-                                      forThumbnail: true);
-                                },
-                                child: Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Container(
-                                      height: Get.height * 0.1,
-                                      // width: Get.width * 0.28,
-                                      decoration: BoxDecoration(
-                                        color: MyColors.greenColor,
-                                        border: Border.all(
-                                            color: Colors.transparent),
-                                        borderRadius: BorderRadius.circular(6),
-                                      ),
-                                      alignment: Alignment.center,
-                                      child: Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.center,
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Obx(
-                                            () => createFeedController
-                                                        .selectedThumbnailPath
-                                                        .value ==
-                                                    ""
-                                                ? const Padding(
-                                                    padding: EdgeInsets.only(
-                                                        left: 0.0),
-                                                    child: Icon(
-                                                      Icons
-                                                          .upload_file_outlined,
-                                                      size: Insets.i35,
-                                                      color: Colors.white,
-                                                    ),
-                                                  )
-                                                : CustomImageView(
-                                                    isProfilePicture: false,
-                                                    radius: Insets.i10,
-                                                    fit: BoxFit.cover,
-                                                    imagePathOrUrl:
-                                                        createFeedController
-                                                            .selectedThumbnailPath
-                                                            .value),
-                                          ),
-                                          const SizedBox(width: Insets.i10),
-                                          Obx(
-                                            () => MyText(
-                                              txtAlign: TextAlign.center,
-                                              text_name: createFeedController
-                                                          .selectedThumbnailPath
-                                                          .value ==
-                                                      ""
-                                                  ? "Upload custom thumbnail"
-                                                  : "Update thumbnail",
-                                              // "If you think you are too small to make a difference...",
-                                              // homeFeedController.searchUserDataList[index].username,
-                                              fontWeight: FontWeight.w500,
-                                              txtcolor: Colors.white,
-                                              txtfontsize: FontSizes.s16,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    )),
-                              )
-                          ],
-                        ),
-                ),
-              ),
-              PageViewModel(
-                title: createFeedController.selectedFilePath.value == ""
-                    ? "Add a description"
-                    : "Do you want to add a description?",
-                decoration: const PageDecoration(
-                  titleTextStyle: TextStyle(
-                    fontSize: 28.0,
-                    fontWeight: FontWeight.w700,
+                              // if (createFeedController.selectedIndex != 0)
+                              //   GestureDetector(
+                              //     onTap: () {
+                              //       createFeedController.pickFile(
+                              //           forThumbnail: true);
+                              //     },
+                              //     child: Padding(
+                              //         padding: const EdgeInsets.all(8.0),
+                              //         child: Container(
+                              //           height: Get.height * 0.1,
+                              //           // width: Get.width * 0.28,
+                              //           decoration: BoxDecoration(
+                              //             color: MyColors.greenColor,
+                              //             border: Border.all(
+                              //                 color: Colors.transparent),
+                              //             borderRadius: BorderRadius.circular(6),
+                              //           ),
+                              //           alignment: Alignment.center,
+                              //           child: Row(
+                              //             crossAxisAlignment:
+                              //                 CrossAxisAlignment.center,
+                              //             mainAxisAlignment:
+                              //                 MainAxisAlignment.center,
+                              //             children: [
+                              //               Obx(
+                              //                 () => createFeedController
+                              //                             .generatedThumNail
+                              //                             .value ==
+                              //                         ""
+                              //                     ? const Padding(
+                              //                         padding: EdgeInsets.only(
+                              //                             left: 0.0),
+                              //                         child: Icon(
+                              //                           Icons
+                              //                               .upload_file_outlined,
+                              //                           size: Insets.i35,
+                              //                           color: Colors.white,
+                              //                         ),
+                              //                       )
+                              //                     : const SizedBox(),
+                              //               ),
+                              //               const SizedBox(width: Insets.i10),
+                              //               Obx(
+                              //                 () => MyText(
+                              //                   txtAlign: TextAlign.center,
+                              //                   text_name: createFeedController
+                              //                               .selectedThumbnailPath
+                              //                               .value ==
+                              //                           ""
+                              //                       ? "Upload custom thumbnail"
+                              //                       : "Update thumbnail",
+                              //                   // "If you think you are too small to make a difference...",
+                              //                   // homeFeedController.searchUserDataList[index].username,
+                              //                   fontWeight: FontWeight.w500,
+                              //                   txtcolor: Colors.white,
+                              //                   txtfontsize: FontSizes.s16,
+                              //                 ),
+                              //               ),
+                              //             ],
+                              //           ),
+                              //         )),
+                              //   )
+                            ],
+                          ),
                   ),
-                  bodyPadding: EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 16.0),
-                  pageColor: Colors.white,
-                  imagePadding: EdgeInsets.zero,
                 ),
-                bodyWidget: Column(
-                  children: [
-                    const SizedBox(
-                      height: 80,
+                /**
+                 * Add a description
+                 */
+                PageViewModel(
+                  title: createFeedController.selectedFilePath.value == ""
+                      ? "Add a description"
+                      : "Do you want to add a description?",
+                  decoration: const PageDecoration(
+                    titleTextStyle: TextStyle(
+                      fontSize: 28.0,
+                      fontWeight: FontWeight.w700,
                     ),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Container(
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                            color: const Color(0xffFAFAFA),
-                            borderRadius: BorderRadius.circular(10)),
-                        child: Theme(
-                          data: ThemeData(primaryColor: MyColors.grayColor),
-                          child: TextFormField(
-                            // focusNode: myFocus,
-                            cursorColor: Colors.black,
-                            maxLines: 6,
-                            controller: createFeedController.captionController,
-                            textInputAction: TextInputAction.search,
-                            decoration: InputDecoration(
+                    bodyPadding: EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 16.0),
+                    pageColor: Colors.white,
+                    imagePadding: EdgeInsets.zero,
+                  ),
+                  bodyWidget: Column(
+                    children: [
+                      const SizedBox(
+                        height: 80,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Container(
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                              color: const Color(0xffFAFAFA),
+                              borderRadius: BorderRadius.circular(10)),
+                          child: Theme(
+                            data: ThemeData(primaryColor: MyColors.grayColor),
+                            child: HashTagTextField(
+                              controller:
+                                  createFeedController.captionController,
+                              maxLines: 6,
+                              basicStyle: TextStyle(
+                                color: MyColors.blackColor,
+                                fontSize: FontSizes.s16,
+                              ),
+                              decoratedStyle: TextStyle(
+                                color: MyColors.greenColor,
+                                fontSize: FontSizes.s16,
+                              ),
+                              decoration: InputDecoration(
                                 contentPadding:
                                     const EdgeInsets.all(Insets.i20),
                                 border: OutlineInputBorder(
@@ -486,25 +507,52 @@ class _CreatePageState extends State<CreatePage> {
                                     borderRadius: BorderRadius.circular(10)),
                                 hintText: 'Post Description',
                                 hintStyle: TextStyle(
-                                    color: MyColors.grayColor,
-                                    fontWeight: FontWeight.w400,
-                                    fontSize: FontSizes.s14),
+                                  color: MyColors.grayColor,
+                                  fontWeight: FontWeight.w400,
+                                  fontSize: FontSizes.s14,
+                                ),
                                 focusedBorder: OutlineInputBorder(
-                                    borderSide:
-                                        BorderSide(color: MyColors.grayColor),
-                                    borderRadius: BorderRadius.circular(10))),
-                            style: TextStyle(
-                                color: MyColors.blackColor,
-                                fontWeight: FontWeight.w400,
-                                fontSize: FontSizes.s15),
+                                  borderSide:
+                                      BorderSide(color: MyColors.grayColor),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                      Padding(
+                        padding: const EdgeInsets.all(Insets.i20),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            MyText(
+                              text_name: "Make Post Private",
+                              txtcolor: MyColors.blackColor,
+                              fontWeight: FontWeight.w500,
+                              txtfontsize: FontSizes.s14,
+                            ),
+                            GestureDetector(
+                              onTap: () {
+                                createFeedController.isFeedPrivate.value =
+                                    !createFeedController.isFeedPrivate.value;
+                              },
+                              child: Obx(
+                                () => SvgPicture.asset(
+                                  createFeedController.isFeedPrivate.value
+                                      ? MyImageURL.ontoggle
+                                      : MyImageURL.offtoggle,
+                                ),
+                              ),
+                            )
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -643,15 +691,18 @@ class _CreatePageState extends State<CreatePage> {
                 height: Insets.i25,
               ),
               InkWell(
-                onTap: () {
+                onTap: () async {
                   if (createFeedController.selectedIndex == 0) {
                     createFeedController.cameraPick();
                   } else if (createFeedController.selectedIndex == 1 ||
                       createFeedController.selectedIndex == 2) {
+                    print(
+                        "selected index ${createFeedController.selectedIndex}");
                     Get.to(() => CameraPage(
                           selectedType: createFeedController.selectedIndex,
                           fromEdit: false,
                         ));
+                    // await createFeedController.videoCamera();
                   } else if (createFeedController.selectedIndex == 2) {
                     Get.to(() => ComingSoonWidget(
                           fromHome: false,

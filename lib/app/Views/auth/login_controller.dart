@@ -16,7 +16,6 @@ import 'package:watermel/app/core/helpers/contants.dart';
 import 'package:watermel/app/data/services/auth_service.dart';
 import 'package:watermel/app/models/detail_post_data_model.dart';
 import 'package:watermel/app/utils/loader.dart';
-import 'package:watermel/app/utils/preference.dart';
 import 'package:watermel/app/utils/theme/print.dart';
 import 'package:watermel/app/utils/toast.dart';
 import 'package:watermel/app/widgets/common_methods.dart';
@@ -96,7 +95,6 @@ class LoginController extends GetxController {
 
   //! SOCIAL BACKEND LOGIN
   Future signinWithSocialMedia(jsonDB) async {
-    storage.write(MyStorage.token, null);
     storage.erase();
     String myUrl = "$baseUrl$googleLoginAPI";
     {
@@ -212,7 +210,7 @@ class LoginController extends GetxController {
                   displayname:
                       profilePostDetails.value.user?.userprofile?.displayName ??
                           "",
-                  feedID: profilePostDetails.value.id,
+                  feedID: profilePostDetails.value.id!,
                   isBookmark: profilePostDetails.value.bookmark,
                   likeCount: profilePostDetails.value.reactionsCount,
                   mediaType: 0,
@@ -229,6 +227,7 @@ class LoginController extends GetxController {
                   userName: profilePostDetails.value.user?.username ?? "",
                   userProfile: profilePostDetails
                       .value.user?.userprofile!.profilePicture,
+                  isPrivate: profilePostDetails.value.isPrivate ?? false,
                 ));
           } else if (profilePostDetails.value.mediaData!.first.video != "") {
             log("21262126 - 2 $baseUrl${profilePostDetails.value.mediaData!.first.video}");
@@ -244,7 +243,7 @@ class LoginController extends GetxController {
                   displayname:
                       profilePostDetails.value.user?.userprofile?.displayName ??
                           "",
-                  feedID: profilePostDetails.value.id,
+                  feedID: profilePostDetails.value.id!,
                   isBookmark: profilePostDetails.value.bookmark,
                   likeCount: profilePostDetails.value.reactionsCount,
                   mediaType: 1,
@@ -261,6 +260,7 @@ class LoginController extends GetxController {
                   userName: profilePostDetails.value.user?.username ?? "",
                   userProfile: profilePostDetails
                       .value.user?.userprofile!.profilePicture,
+                  isPrivate: profilePostDetails.value.isPrivate ?? false,
                 ));
           } else if (profilePostDetails.value.mediaData!.first.audio != "") {
             log("21262126 - 3 $baseUrl${profilePostDetails.value.mediaData!.first.audio}");
@@ -276,7 +276,7 @@ class LoginController extends GetxController {
                   displayname:
                       profilePostDetails.value.user?.userprofile?.displayName ??
                           "",
-                  feedID: profilePostDetails.value.id,
+                  feedID: profilePostDetails.value.id!,
                   isBookmark: profilePostDetails.value.bookmark,
                   likeCount: profilePostDetails.value.reactionsCount,
                   mediaType: 2,
@@ -293,6 +293,7 @@ class LoginController extends GetxController {
                   userName: profilePostDetails.value.user?.username ?? "",
                   userProfile: profilePostDetails
                       .value.user?.userprofile!.profilePicture,
+                  isPrivate: profilePostDetails.value.isPrivate ?? false,
                 ));
           }
 

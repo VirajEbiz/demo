@@ -292,10 +292,11 @@ class SignUpPage extends StatelessWidget {
   }
 
   void signUpUser() async {
-    if (selectedFilePath.value == "") {
-      showMessage("Please select an image", type: "error");
-      return;
-    } else if (controller.signupFormKey.currentState!.validate()) {
+    // if (selectedFilePath.value == "") {
+    //   showMessage("Please select an image", type: "error");
+    //   return;
+    // } else
+    if (controller.signupFormKey.currentState!.validate()) {
       controller.registerLoading.value = true;
       await AuthMethods().SignUpUserAPI(
         email: _emailController.text,

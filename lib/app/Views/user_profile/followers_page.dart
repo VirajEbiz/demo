@@ -9,16 +9,22 @@ import 'package:watermel/app/core/helpers/contants.dart';
 import 'package:watermel/app/utils/theme/colors.dart';
 import 'package:watermel/app/utils/theme/fonts.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:watermel/app/widgets/cache_image_widget.dart';
 import 'package:watermel/app/widgets/common_text.dart';
 
 /// A page that displays the followers and following of a user profile.
 class FollowersPage extends StatefulWidget {
+  final bool fromProfile;
   final String username;
   final bool? isFollowers;
 
   /// Constructs a [FollowersPage] with the given [isFollowers] parameter.
-  const FollowersPage(
-      {super.key, required this.username, required this.isFollowers});
+  const FollowersPage({
+    super.key,
+    required this.fromProfile,
+    required this.username,
+    required this.isFollowers,
+  });
 
   @override
   _FollowersPageState createState() => _FollowersPageState();
@@ -34,6 +40,7 @@ class _FollowersPageState extends State<FollowersPage>
   @override
   void initState() {
     super.initState();
+    print("username ===> ${widget.username}");
     _tabController = TabController(
         length: 2, vsync: this, initialIndex: widget.isFollowers! ? 0 : 1);
     userProfileController.currentFollowersPage.value = 1;
@@ -48,7 +55,9 @@ class _FollowersPageState extends State<FollowersPage>
       await userProfileController.getFollowingList();
 
       setState(() {});
-    } on Exception catch (e) {}
+    } on Exception catch (e) {
+      print(e);
+    }
   }
 
   bool onNotification(ScrollNotification notification) {
@@ -74,116 +83,177 @@ class _FollowersPageState extends State<FollowersPage>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(CupertinoIcons.back),
-          onPressed: () {
-            Get.back();
-            Get.offAll(
-              () => HomePage(
-                pageIndex: 3,
-              ),
-            );
-          },
-        ),
-        title: Text(
-          widget.username,
-          style: TextStyle(
-            color: MyColors.blackColor,
-            fontSize: FontSizes.s16,
-            fontWeight: FontWeight.w600,
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) {
+        Get.back();
+        if (widget.fromProfile) {
+          Get.offAll(
+            () => HomePage(
+              pageIndex: 3,
+            ),
+          );
+        } else {
+          String username = widget.username;
+          Get.offAll(() => HomePage());
+          Get.to(() => UserProfileScreenbackup(
+                fromProfile: widget.fromProfile,
+                userName: username,
+              ));
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(CupertinoIcons.back),
+            onPressed: () {
+              Get.back();
+              if (widget.fromProfile) {
+                Get.offAll(
+                  () => HomePage(
+                    pageIndex: 3,
+                  ),
+                );
+              } else {
+                String username = widget.username;
+                Get.offAll(() => HomePage());
+                Get.to(() => UserProfileScreenbackup(
+                      fromProfile: widget.fromProfile,
+                      userName: username,
+                    ));
+              }
+            },
+          ),
+          title: Text(
+            widget.username,
+            style: TextStyle(
+              color: MyColors.blackColor,
+              fontSize: FontSizes.s16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          bottom: TabBar(
+            controller: _tabController,
+            tabs: const [
+              Tab(text: 'Followers'),
+              Tab(text: 'Following'),
+            ],
           ),
         ),
-        bottom: TabBar(
+        body: TabBarView(
           controller: _tabController,
-          tabs: const [
-            Tab(text: 'Followers'),
-            Tab(text: 'Following'),
+          children: [
+            // Followers Tab
+            NotificationListener(
+              onNotification: onNotification,
+              child: ListView.builder(
+                itemCount: userProfileController.followersList.length,
+                itemBuilder: (context, index) {
+                  final followerUser =
+                      userProfileController.followersList[index];
+                  return ListTile(
+                    onTap: () {
+                      Get.to(() => UserProfileScreenbackup(
+                            fromProfile: false,
+                            userName: followerUser.username,
+                          ));
+                    },
+                    leading: Container(
+                      width: 45,
+                      height: 45,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                      ),
+                      child: CustomImageView(
+                        radius: 100,
+                        imagePathOrUrl:
+                            "$baseForImage${followerUser.profilePicture}",
+                        isProfilePicture: true,
+                      ),
+                    ),
+                    title: MyText(
+                      txtAlign: TextAlign.start,
+                      text_name: followerUser.displayName ?? "N/A",
+                      fontWeight: FontWeight.w500,
+                      txtcolor: MyColors.blackColor,
+                      txtfontsize: FontSizes.s14,
+                    ),
+                    subtitle: MyText(
+                      txtAlign: TextAlign.start,
+                      text_name: "@${followerUser.username}",
+                      fontWeight: FontWeight.w400,
+                      txtcolor: MyColors.grayColor,
+                      txtfontsize: FontSizes.s12,
+                    ),
+                    trailing: widget.fromProfile
+                        ? TextButton(
+                            child: const Text('Remove'),
+                            onPressed: () async {
+                              await confirmPopup(context, followerUser.id!);
+                            },
+                          )
+                        : null,
+                  );
+                },
+              ),
+            ),
+            // Following Tab
+            NotificationListener(
+              onNotification: onNotification,
+              child: ListView.builder(
+                  scrollDirection: Axis.vertical,
+                  shrinkWrap: true,
+                  itemCount: userProfileController.followingList.length,
+                  itemBuilder: (context, index) {
+                    final followingUser =
+                        userProfileController.followingList[index];
+                    return ListTile(
+                      onTap: () {
+                        Get.to(() => UserProfileScreenbackup(
+                              fromProfile: false,
+                              userName: followingUser.username,
+                            ));
+                      },
+                      leading: Container(
+                        width: 45,
+                        height: 45,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                        ),
+                        child: CustomImageView(
+                          radius: 100,
+                          imagePathOrUrl:
+                              "$baseForImage${followingUser.profilePicture}",
+                          isProfilePicture: true,
+                        ),
+                      ),
+                      title: MyText(
+                        txtAlign: TextAlign.start,
+                        text_name: followingUser.displayName ?? "N/A",
+                        fontWeight: FontWeight.w500,
+                        txtcolor: MyColors.blackColor,
+                        txtfontsize: FontSizes.s14,
+                      ),
+                      subtitle: MyText(
+                        txtAlign: TextAlign.start,
+                        text_name: "@${followingUser.username}",
+                        fontWeight: FontWeight.w400,
+                        txtcolor: MyColors.grayColor,
+                        txtfontsize: FontSizes.s12,
+                      ),
+                      trailing: widget.fromProfile
+                          ? TextButton(
+                              child: const Text('Unfollow'),
+                              onPressed: () async {
+                                await confirmPopup(context, followingUser.id!);
+                              },
+                            )
+                          : null,
+                    );
+                  }),
+            ),
           ],
         ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          // Followers Tab
-          NotificationListener(
-            onNotification: onNotification,
-            child: ListView.builder(
-              itemCount: userProfileController.followersList.length,
-              itemBuilder: (context, index) {
-                final followerUser = userProfileController.followersList[index];
-                return ListTile(
-                    leading: followerUser.profilePicture != null
-                        ? CircleAvatar(
-                            backgroundImage: NetworkImage(
-                                baseUrl + followerUser.profilePicture!),
-                          )
-                        : CircleAvatar(
-                            child: Text(
-                              followerUser.username![0].toUpperCase(),
-                              style: TextStyle(color: MyColors.whiteColor),
-                            ),
-                          ),
-                    title: Text(followerUser.username!),
-                    onTap: () {
-                      Get.to(
-                        () => UserProfileScreenbackup(
-                          fromProfile: false,
-                          userName: followerUser.username,
-                        ),
-                      );
-                    },
-                    // Remove follower trailing
-                    trailing: TextButton(
-                      child: const Text('Remove'),
-                      onPressed: () async {
-                        await confirmPopup(context, followerUser.userId!);
-                      },
-                    ));
-              },
-            ),
-          ),
-          // Following Tab
-          NotificationListener(
-            onNotification: onNotification,
-            child: ListView.builder(
-              itemCount: userProfileController.followingList.length,
-              itemBuilder: (context, index) {
-                final followingUser =
-                    userProfileController.followingList[index];
-                return ListTile(
-                  leading: followingUser.profilePicture != null
-                      ? CircleAvatar(
-                          backgroundImage: NetworkImage(
-                              baseUrl + followingUser.profilePicture!),
-                        )
-                      : CircleAvatar(
-                          child: Text(
-                            followingUser.username![0].toUpperCase(),
-                            style: TextStyle(color: MyColors.whiteColor),
-                          ),
-                        ),
-                  title: Text(followingUser.username!),
-                  onTap: () {
-                    Get.to(
-                      () => UserProfileScreenbackup(
-                        fromProfile: false,
-                        userName: followingUser.username,
-                      ),
-                    );
-                  },
-                  // Unfollow trailing
-                  trailing: TextButton(
-                      child: const Text('Unfollow'),
-                      onPressed: () async {
-                        await confirmPopup(context, followingUser.userId!);
-                      }),
-                );
-              },
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -227,7 +297,7 @@ class _FollowersPageState extends State<FollowersPage>
                         if (responseCode == 200) {
                           setState(() {
                             userProfileController.followersList
-                                .removeWhere((element) => element.userId == id);
+                                .removeWhere((element) => element.id == id);
                           });
                         }
                         Get.back();
@@ -245,7 +315,7 @@ class _FollowersPageState extends State<FollowersPage>
                           userProfileController.update();
                           setState(() {
                             userProfileController.followingList
-                                .removeWhere((element) => element.userId == id);
+                                .removeWhere((element) => element.id == id);
                           });
                         });
                       },

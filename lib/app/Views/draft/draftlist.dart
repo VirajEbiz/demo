@@ -281,7 +281,7 @@ class _UserdraftlistScreenState extends State<UserdraftlistScreen>
                     userName: storage.read(MyStorage.userName),
                     displayname: storage.read(MyStorage.displayName),
                     userProfile:
-                        "$baseUrl${storage.read(MyStorage.userProfile)}",
+                        "$baseForImage${storage.read(MyStorage.userProfile)}",
                   ));
             },
             child: Container(
@@ -420,7 +420,7 @@ class _UserdraftlistScreenState extends State<UserdraftlistScreen>
                     index: index,
                     userName: storage.read(MyStorage.userName),
                     userProfile:
-                        "$baseUrl${storage.read(MyStorage.userProfile)}",
+                        "$baseForImage${storage.read(MyStorage.userProfile)}",
                   ));
             },
             child: Container(
@@ -608,7 +608,7 @@ class _UserdraftlistScreenState extends State<UserdraftlistScreen>
                         index: index,
                         userName: storage.read(MyStorage.userName),
                         userProfile:
-                            "$baseUrl${storage.read(MyStorage.userProfile)}",
+                            "$baseForImage${storage.read(MyStorage.userProfile)}",
                       ))?.then((value) {
                       if (value == true) {
                         onwatchTab();
@@ -623,7 +623,7 @@ class _UserdraftlistScreenState extends State<UserdraftlistScreen>
                         index: index,
                         userName: storage.read(MyStorage.userName),
                         userProfile:
-                            "$baseUrl${storage.read(MyStorage.userProfile)}",
+                            "$baseForImage${storage.read(MyStorage.userProfile)}",
                       ));
             },
             child: Container(

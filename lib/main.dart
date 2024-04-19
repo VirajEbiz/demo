@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -32,10 +33,12 @@ void main() async {
 
   cameras = await availableCameras();
   final SharedPreferences prefs = await SharedPreferences.getInstance();
+
   await storage.read(MyStorage.refreshToken) == null ||
           await storage.read(MyStorage.refreshToken) == ""
       ? null
       : await ApiManager().setRefreshTokenAPI(fromMain: true);
+
   prefs.setStringList("viewedPosts", []);
 
   if (prefs.getBool('first_run') ?? true) {

@@ -3,10 +3,8 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
-import 'package:watermel/app/Views/Home%20Feed/controllers/feed_home_controller.dart';
 import 'package:watermel/app/Views/auth/login_page.dart';
 import 'package:watermel/app/Views/home_bottom_bar/home_page.dart';
-import 'package:watermel/app/Views/home_bottom_bar/homebottom_controller.dart';
 import 'package:watermel/app/utils/preference.dart';
 import 'package:watermel/main.dart';
 import 'package:dio/dio.dart' as refreshData;
@@ -58,10 +56,9 @@ class ApiManager {
       ),
     );
   }
-  int i = 0;
+
   // ignore: missing_return
   Future<APIResponse> call(String apiName, body, type) async {
-    i++;
     APIResponse? apiData = APIResponse(
         code: 1,
         message: "Something went wrong, Please wait".tr,
@@ -73,15 +70,10 @@ class ApiManager {
       log("API name........${apiName}");
       if (isInternet) {
         try {
-          if (noAuth.contains(apiName) == false) {
-            dio.options.headers["Authorization"] =
-                storage.read(MyStorage.token) == null
-                    ? null
-                    : "Bearer ${storage.read(MyStorage.token)}";
+          String? token = await MyStorage.read(MyStorage.token);
 
-            dio.options.headers["Content-Type"] = "application/json";
-          }
-          print("Check I ==?> $i");
+          dio.options.headers["Content-Type"] = "application/json";
+
           dynamic response;
           switch (type) {
             case ApiType.post:
@@ -103,7 +95,7 @@ class ApiManager {
               response = await dio.put(apiName, data: body);
               break;
           }
-          apiData = await checkStatus(response, apiName, body, type);
+          apiData = await checkStatus(response, apiName);
           return apiData!;
         } catch (e) {
           hideLoader();
@@ -134,7 +126,7 @@ class ApiManager {
   int temp = 0;
 
   //#region functions
-  Future<APIResponse?> checkStatus(response, apiName, body, type) async {
+  Future<APIResponse?> checkStatus(response, apiName) async {
     log("response ${response.toString()}");
     MyPrint(
         tag: "statusCode =111=> ${apiName}",
@@ -149,22 +141,7 @@ class ApiManager {
           response.data["code"] == 500 ||
           response.data["code"] == 404) {
         if (response.data['message'] == "unauthorized") {
-          print("vvvvvvvvvvvv ------------------");
-
-          await setRefreshTokenAPI(body: body, type: type, apiName: apiName);
-          return APIResponse(
-            code: "000",
-            status: "",
-            message: "",
-          );
-        } else if (response.data['message'] ==
-            "No user is related to this refresh token") {
-          await setRefreshTokenAPI(body: body, type: type, apiName: apiName);
-          return APIResponse(
-            code: "000",
-            status: "",
-            message: "",
-          );
+          await setRefreshTokenAPI();
         } else {
           return APIResponse(
             code: response.data['code'],
@@ -193,14 +170,7 @@ class ApiManager {
         response.data["code"] == 500 ||
         response.data["code"] == 404) {
       if (response.data['message'] == "unauthorized") {
-        print("vvvvvvvvvvvv ------------------ ${response.data['message']}");
-
-        await setRefreshTokenAPI(body: body, type: type, apiName: apiName);
-        return APIResponse(
-          code: "000",
-          status: "",
-          message: "",
-        );
+        await setRefreshTokenAPI();
       } else {
         return APIResponse(
           code: response.data['code'],
@@ -223,10 +193,12 @@ class ApiManager {
     }
   }
 
-  Future setRefreshTokenAPI({fromMain, body, type, apiName}) async {
-    await storage.write(MyStorage.token, null);
-    String refreshToeken = await storage.read(MyStorage.refreshToken) ?? "";
-
+  Future setRefreshTokenAPI({fromMain}) async {
+    storage.write(MyStorage.token, null);
+    String refreshToeken = await storage.read(MyStorage.refreshToken);
+    print("Passing refresh token check ==> ${refreshToeken}");
+    print(
+        "Passing refresh token check ==> storage ${await storage.read(MyStorage.refreshToken)}");
     refreshData.FormData? formData1;
     Map<String, dynamic> jsonDB = {
       'refresh':
@@ -246,7 +218,7 @@ class ApiManager {
         var token = await MyStorage.read(MyStorage.token);
         var refresh = await MyStorage.read(MyStorage.refreshToken);
         if (token != null && refresh != null && token != "" && refresh != "") {
-          return fromMain == true ? null : "fromMain";
+          Get.offAll(() => HomePage());
         } else {
           CommonMethod().clearGetStorage();
           Get.offAll(() => LoginPage());
@@ -283,11 +255,4 @@ class ApiManager {
         errorShow["Status"] != null &&
         errorShow["Status"] == 401) {}
   }
-
-  // static const noAuth = [
-  //   ApiMethods.BASE_URL + ApiMethods.signIn,
-  //   ApiMethods.BASE_URL + ApiMethods.signUp,
-  //   ApiMethods.privacyPolicy + ApiMethods.privacyPolicy,
-  //   ApiMethods.termCondition + ApiMethods.termCondition,
-  // ];
 }

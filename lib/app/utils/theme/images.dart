@@ -73,4 +73,8 @@ class MyImageURL {
   static const dummyProfileImage = "${root}dummy_profile.jpg";
   static const unbookmarkImage = "${root}unbookMark.svg";
   static const bookmarkImage = "${root}bookMark.svg";
+  static const billboardIcon = "${root}billboard_icon.svg";
+  static const debatesIcon = "${root}debates_icon.svg";
+  static const quoteStart = "${root}quote_start.svg";
+  static const quoteEnd = "${root}quote_end.svg";
 }

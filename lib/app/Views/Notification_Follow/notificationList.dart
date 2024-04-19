@@ -145,7 +145,7 @@ class NotificationListScreenState extends State<NotificationListScreen> {
                             imagePathOrUrl: data.notifSenderProfilePicture ==
                                     null
                                 ? ""
-                                : "$baseUrl${data.notifSenderProfilePicture}"),
+                                : "$baseForImage${data.notifSenderProfilePicture}"),
                       )),
                     ),
                   ),

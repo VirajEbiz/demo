@@ -31,7 +31,7 @@ class MainContentTypeButtonWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Obx(
       () => Container(
-        height: Get.height * 0.065,
+        height: Get.height * 0.05,
         width: Get.width * 0.28,
         decoration: BoxDecoration(
           color: isSelected.value == true &&
